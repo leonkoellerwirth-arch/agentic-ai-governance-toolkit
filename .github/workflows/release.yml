@@ -31,7 +31,8 @@ jobs:
       - name: Build sdist and wheel
         run: |
           pip install build
-          python -m build
+          # The Python project lives under evaluator/; emit artifacts to ./dist for the steps below.
+          python -m build evaluator --outdir dist
       - name: Generate SBOM (CycloneDX)
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
