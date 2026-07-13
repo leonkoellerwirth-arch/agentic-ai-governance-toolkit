@@ -21,7 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 # The LLM-judge pattern is optional — the core evaluator runs without it.
 llm = ["ollama>=0.3"]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+dev = ["pytest>=8.0", "ruff>=0.15.21"]
 
 [project.scripts]
 agent-eval = "agent_evaluator.cli:main"
