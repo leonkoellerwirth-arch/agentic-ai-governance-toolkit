@@ -1,1 +1,17 @@
-%% TODO (M3): escalation paths from operate & monitor.
+%% Escalation — what happens when monitoring detects a breach or incident in operation.
+flowchart TD
+    M["6 · Operate & Monitor"] --> T{"Threshold breach<br/>or incident?"}
+    T -->|"No"| M
+    T -->|"KPI / threshold breach"| L1["AI team triage"]
+    L1 --> Q{"Contained within tolerance?"}
+    Q -->|"Yes"| M
+    Q -->|"No"| L2["Risk — 2nd line review"]
+    L2 --> R{"Material risk or<br/>regulatory relevance?"}
+    R -->|"No"| C["Corrective action + re-assessment"]
+    R -->|"Yes"| BRD["Governance board / incident process"]
+    BRD --> D{"Continue, restrict,<br/>or decommission?"}
+    D -->|"Continue"| C
+    D -->|"Restrict"| E["Reduce scope or autonomy → re-assess"]
+    D -->|"Decommission"| F["7 · Decommissioning"]
+    C --> M
+    E --> M

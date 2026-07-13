@@ -1,1 +1,31 @@
-%% TODO (M3): end-to-end lifecycle flowchart, swimlanes as subgraphs (Business / AI team / Risk 2nd line / IT ops).
+%% Agent lifecycle — end to end, with responsibility lanes as subgraphs.
+%% Lanes: Business (1st line) · AI team · Risk (2nd line) · IT operations.
+%% Renders natively on GitHub. Source of truth for the diagram embedded in lifecycle-overview.md.
+flowchart TB
+    subgraph BIZ["Business — 1st line"]
+        P1["1 · Intake & Triage"]
+        P5["5 · Go-Live"]
+    end
+    subgraph AIT["AI team"]
+        P3["3 · Design & Controls"]
+        P4["4 · Validation"]
+    end
+    subgraph RISK["Risk — 2nd line"]
+        P2["2 · Risk Assessment"]
+        GATE{"Control level<br/>C1–C4"}
+    end
+    subgraph OPS["IT operations"]
+        P6["6 · Operate & Monitor"]
+        P7["7 · Change & Decommissioning"]
+    end
+
+    P1 --> P2 --> GATE
+    GATE -->|"C1–C2: light-touch"| P3
+    GATE -->|"C3–C4: enhanced controls"| P3
+    P3 --> P4
+    P4 -->|"gates passed"| P5
+    P4 -->|"gates failed"| P3
+    P5 --> P6
+    P6 -->|"periodic re-assessment"| P2
+    P6 -->|"material change / retire"| P7
+    P7 -->|"successor use case"| P1

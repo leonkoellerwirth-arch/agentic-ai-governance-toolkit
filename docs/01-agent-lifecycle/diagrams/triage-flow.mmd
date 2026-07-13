@@ -1,1 +1,17 @@
-%% TODO (M3): intake & triage decision flow.
+%% Intake & Triage — deciding whether an agent use case proceeds, and at what control intensity.
+flowchart TD
+    A["New agent use case"] --> B{"Autonomous or acting agent?"}
+    B -->|"No — classic software"| Z["Out of scope here:<br/>standard SDLC governance"]
+    B -->|"Yes"| C["Capture in use-case intake form"]
+    C --> D{"Prohibited or unacceptable use?"}
+    D -->|"Yes"| X["Reject or redesign"]
+    D -->|"No"| E["Score the six risk dimensions"]
+    E --> F{"Control level"}
+    F -->|"C1"| G1["Minimal: register + standard controls"]
+    F -->|"C2"| G2["Standard: owner sign-off + KPIs"]
+    F -->|"C3"| G3["Enhanced: human-in-the-loop + 2nd-line review"]
+    F -->|"C4"| G4["Critical: per-action authorization + board visibility"]
+    G1 --> H["Proceed to Design & Controls"]
+    G2 --> H
+    G3 --> H
+    G4 --> H
