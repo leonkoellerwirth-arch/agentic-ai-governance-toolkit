@@ -1,9 +1,19 @@
 # Keeps dependencies and pinned GitHub Actions fresh. The Python project lives under evaluator/.
+# `increase-if-necessary` means a `>=` floor is only raised when it actually has to be — so a new
+# release does not open a PR just to bump a lower bound the spec already allows. Updates are grouped
+# so at most one PR per ecosystem lands per run.
 version: 2
 updates:
   - package-ecosystem: pip
     directory: "/evaluator"
     schedule: { interval: weekly }
+    versioning-strategy: increase-if-necessary
+    groups:
+      python:
+        patterns: ["*"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule: { interval: weekly }
+    groups:
+      actions:
+        patterns: ["*"]
