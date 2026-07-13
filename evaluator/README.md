@@ -10,13 +10,28 @@ policy, and flags runtime logs against operational thresholds.
 ## Quickstart
 
 ```bash
-cd evaluator
-../setup.sh              # or: python3.11 -m venv .venv && .venv/bin/pip install -e ".[dev]"
-agent-eval --version
-agent-eval info
+./setup.sh   # from the repo root: .venv + install + offline tests
+source .venv/bin/activate
+
+# 1. Score a use case → risk total, control level, required controls
+agent-eval score --input evaluator/examples/usecase-03-payments-operations-agent.yaml
+
+# 2. Check an agent against a machine-readable policy (exit 1 on any violation)
+agent-eval policy-check \
+  --input evaluator/examples/agent-for-policy-check.yaml \
+  --policy evaluator/policies/example-policy.yaml
+
+# 3. Analyze an agent's audit trail against policy thresholds (exit 1 on any finding)
+agent-eval log-analyze \
+  --input evaluator/examples/logs-sample.jsonl \
+  --policy evaluator/policies/example-policy.yaml
 ```
 
-The `score`, `policy-check`, and `log-analyze` subcommands are wired in milestones M2 and M6.
+Add `--json` to `score`, `policy-check`, and `log-analyze` for machine-readable output.
+`agent-eval render-docs` regenerates the rubric tables in `docs/` from `rubric.yaml`.
+
+The optional `judge` command (`agent-eval judge`) demonstrates the local LLM-as-judge pattern and
+requires the `llm` extra plus a running Ollama; it is a reference pattern, not a production system.
 
 ## Architecture
 

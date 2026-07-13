@@ -1,0 +1,12 @@
+# Fictional agent attributes for `agent-eval policy-check` (the payments agent from the worked
+# examples, declared without a human in the loop — so the check flags several violations).
+name: Payments operations agent
+scores:
+  autonomy: 3
+  action_space: 5      # external payments — above the policy cap of 4
+  reversibility: 4
+  data_sensitivity: 3
+  explainability: 3
+  blast_radius: 3
+data_categories: [internal, personal]
+human_in_the_loop: false   # but the computed level (C4) requires one

@@ -1,1 +1,25 @@
-# Example policy — filled in M6
+# Example machine-readable policy for the agent evaluator (fictional, illustrative).
+#
+# Two sections:
+#   agent_limits   — checked by `agent-eval policy-check` against an agent's declared attributes.
+#   log_thresholds — checked by `agent-eval log-analyze` against an agent's runtime audit trail.
+#
+# This is a reference pattern, not a compliance baseline. Set your own limits from your risk appetite.
+version: 1
+name: Example baseline policy
+
+agent_limits:
+  # A dimension score above its cap is a violation — the agent exceeds what this policy allows
+  # without an explicit, escalated approval.
+  max_scores:
+    action_space: 4        # writing to core systems is allowed; external action (5) must escalate
+    data_sensitivity: 4    # special-category data / secrets (5) must escalate
+  allowed_data_categories: [public, internal, personal]
+  human_in_the_loop_required_at: C3   # at control level C3 and above, the agent must have HITL
+  max_control_level: C3               # C4 agents must be escalated to the governance board
+
+log_thresholds:
+  escalation_rate_max: 0.30           # share of tasks escalated to a human
+  error_rate_max: 0.05                # share of tasks ending in error
+  blocked_action_rate_max: 0.10       # share of actions refused by the action-space whitelist
+  sensitive_out_of_scope_events_max: 0  # any sensitive-data action outside scope is a finding

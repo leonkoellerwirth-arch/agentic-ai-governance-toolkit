@@ -19,6 +19,9 @@ from rich.console import Console
 from rich.table import Table
 
 from . import __version__
+from .llm_judge import JudgeUnavailable, judge_output
+from .log_analyzer import analyze_log_file
+from .policy_check import PolicyCheckInput, check_policy, load_policy
 from .risk_score import AgentAssessment, RiskResult, score_agent
 from .rubric import load_rubric, update_docs
 
@@ -79,6 +82,115 @@ def render_docs(check: bool) -> None:
         console.print("docs are consistent with rubric.yaml")
     else:
         console.print(f"rewrote: {', '.join(changed)}" if changed else "docs already up to date")
+
+
+@main.command("policy-check")
+@click.option(
+    "--input",
+    "input_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="YAML with the agent's name, scores, data_categories, and human_in_the_loop.",
+)
+@click.option(
+    "--policy",
+    "policy_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="YAML policy file (see policies/example-policy.yaml).",
+)
+@click.option("--json", "as_json", is_flag=True, help="Emit the report as JSON.")
+def policy_check(input_path: Path, policy_path: Path, as_json: bool) -> None:
+    """Check an agent against a policy; exit non-zero if it has any violations."""
+    data = yaml.safe_load(input_path.read_text(encoding="utf-8")) or {}
+    try:
+        report = check_policy(PolicyCheckInput(**data), load_policy(policy_path))
+    except (ValueError, TypeError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if as_json:
+        click.echo(json.dumps(report.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        console.print(f"\n[bold]{report.agent_name}[/bold] vs policy '{report.policy_name}'")
+        console.print(f"Control level: {report.level}")
+        if report.passed:
+            console.print("[green]No policy violations.[/green]\n")
+        else:
+            for v in report.violations:
+                console.print(f"  [red]✗[/red] [{v.severity}] {v.rule}: {v.message}")
+            console.print()
+    if not report.passed:
+        raise SystemExit(1)
+
+
+@main.command("log-analyze")
+@click.option(
+    "--input",
+    "input_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="JSONL audit trail (one event per line).",
+)
+@click.option(
+    "--policy",
+    "policy_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="YAML policy file with a log_thresholds section.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Emit the analysis as JSON.")
+def log_analyze(input_path: Path, policy_path: Path, as_json: bool) -> None:
+    """Analyze an agent's logs against policy thresholds; exit non-zero on any finding."""
+    thresholds = load_policy(policy_path).log_thresholds
+    try:
+        analysis = analyze_log_file(input_path, thresholds)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    if as_json:
+        click.echo(json.dumps(analysis.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        m = analysis.metrics
+        console.print(
+            f"\n[bold]Logs[/bold]: {m.total_events} events, {m.tasks} tasks — "
+            f"escalation {m.escalation_rate}, error {m.error_rate}, blocked {m.blocked_action_rate}"
+        )
+        if analysis.passed:
+            console.print("[green]Within all thresholds.[/green]\n")
+        else:
+            for f in analysis.findings:
+                console.print(f"  [red]✗[/red] {f.message}")
+            console.print()
+    if not analysis.passed:
+        raise SystemExit(1)
+
+
+@main.command()
+@click.option(
+    "--output",
+    "output_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="Text file with the agent output to judge.",
+)
+@click.option(
+    "--policy",
+    "policy_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="YAML policy file; its name and limits form the policy summary.",
+)
+def judge(output_path: Path, policy_path: Path) -> None:
+    """OPTIONAL: judge an agent output with a local LLM (Ollama). A pattern, not production."""
+    policy = load_policy(policy_path)
+    summary = f"{policy.name}: {policy.agent_limits.model_dump()}"
+    try:
+        verdict = judge_output(output_path.read_text(encoding="utf-8"), summary)
+    except JudgeUnavailable as exc:
+        raise click.ClickException(str(exc)) from exc
+    console.print(f"[bold]{verdict.decision.upper()}[/bold] — {verdict.reason}")
+    if verdict.decision != "pass":
+        raise SystemExit(1)
 
 
 def _print_result(result: RiskResult) -> None:
