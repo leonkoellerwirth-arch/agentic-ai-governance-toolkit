@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # The LLM-judge pattern is optional — the core evaluator runs without it.
-llm = ["ollama>=0.3"]
+llm = ["ollama>=0.6.2"]
 dev = ["pytest>=8.0", "ruff>=0.5"]
 
 [project.scripts]
