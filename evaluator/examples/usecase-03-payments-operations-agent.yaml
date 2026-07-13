@@ -1,0 +1,13 @@
+# Fictional use case — Nordbank (a fictional regional bank).
+# An agent that prepares and initiates outbound payments in operations.
+name: Payments operations agent
+description: >-
+  Prepares and initiates outbound supplier payments from operational queues. Even though its
+  aggregate score sits in the Enhanced band, the ability to move money externally forces Critical.
+scores:
+  autonomy: 3        # acts within scope; humans review exceptions
+  action_space: 5    # initiates external payments — acts on the outside world
+  reversibility: 4   # a released payment is largely irreversible
+  data_sensitivity: 3  # payment and counterparty data
+  explainability: 3  # model-driven, each step logged
+  blast_radius: 3    # affects a critical business function

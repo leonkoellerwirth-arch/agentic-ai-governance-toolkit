@@ -1,0 +1,13 @@
+# Fictional use case — Nordbank (a fictional regional bank).
+# An internal assistant that answers staff questions from approved policy documents.
+name: Internal knowledge assistant
+description: >-
+  Answers employee questions about internal policies and procedures by retrieving and summarizing
+  approved documents. Read-only; a human decides what to do with the answer.
+scores:
+  autonomy: 1        # proposes answers; the employee acts
+  action_space: 1    # read-only retrieval and summarization
+  reversibility: 1   # produces text only; nothing to undo
+  data_sensitivity: 2  # internal, non-personal policy documents
+  explainability: 3  # model-driven, but every answer and its sources are logged
+  blast_radius: 2    # affects the individual employee's task

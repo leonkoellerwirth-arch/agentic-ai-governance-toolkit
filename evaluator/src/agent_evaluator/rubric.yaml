@@ -1,0 +1,144 @@
+# =============================================================================
+# THE SINGLE SOURCE OF TRUTH for the agent control-intensity rubric.
+#
+# Read by:   agent_evaluator.risk_score  (scoring)
+# Rendered:  docs/02-risk-assessment/agent-risk-model.md   (dimensions table)
+#            docs/02-risk-assessment/scoring-rubric.md      (bands, overrides, controls)
+#            → run `python -m agent_evaluator.rubric --write` after editing this file.
+# Tested:    evaluator/tests/test_rubric_consistency.py fails if the docs drift from this file.
+#
+# Change the rubric HERE and nowhere else. Documentation and code both follow.
+# =============================================================================
+
+version: 1
+title: Agent control-intensity rubric
+scale: { min: 1, max: 5 }
+
+# --- Scoring dimensions -------------------------------------------------------
+# Each dimension is scored 1-5 against the anchor that best matches the agent.
+dimensions:
+  - key: autonomy
+    label: Autonomy
+    question: How much can the agent act without a human in the loop?
+    anchors:
+      1: Purely assistive — proposes drafts a human must review and submit.
+      2: Suggests actions and pre-fills them; a human approves each one.
+      3: Acts on its own within a narrow, pre-approved scope; humans spot-check.
+      4: Acts autonomously across a broad scope; humans review exceptions only.
+      5: Fully autonomous — decides and acts with no routine human confirmation.
+
+  - key: action_space
+    label: Action space
+    question: What can the agent actually do to systems and the outside world?
+    anchors:
+      1: Read-only — retrieves and summarizes; changes nothing.
+      2: Writes to low-stakes or sandbox stores (drafts, tickets, notes).
+      3: Writes to systems of record the business relies on.
+      4: Writes to core or regulated systems (ledgers, customer master data).
+      5: Acts on the outside world — payments, external messages, irreversible orders.
+
+  - key: reversibility
+    label: Reversibility
+    question: How easily can an action be undone?
+    anchors:
+      1: Every action is trivially reversible; no external effect.
+      2: Reversible with routine effort inside the same system.
+      3: Reversible only through a manual, tracked correction process.
+      4: Largely irreversible; remediation is costly or partial.
+      5: Irreversible external effect — funds moved, message sent, contract formed.
+
+  - key: data_sensitivity
+    label: Data sensitivity
+    question: How sensitive is the data the agent can read or write?
+    anchors:
+      1: Public or non-sensitive data only.
+      2: Internal, non-personal business data.
+      3: Personal data (GDPR-relevant).
+      4: Large-scale or financial personal data, or confidential business data.
+      5: Special-category personal data or secrets (health, biometrics, credentials).
+
+  - key: explainability
+    label: Explainability & traceability
+    question: Can each decision be reconstructed and explained afterwards?
+    anchors:
+      1: Deterministic and fully logged; every decision reconstructable.
+      2: Mostly deterministic; decisions logged with their rationale.
+      3: Model-driven, but each step is logged and attributable.
+      4: Model-driven with limited insight into why a decision was made.
+      5: Opaque — outputs cannot be reliably explained or reproduced.
+
+  - key: blast_radius
+    label: Blast radius
+    question: How far does a bad action reach?
+    anchors:
+      1: Affects a single user or a single internal task.
+      2: Affects one team or one process.
+      3: Affects a business unit or a defined customer segment.
+      4: Affects many customers or a critical business function.
+      5: Enterprise-wide or broad customer impact; potential systemic effect.
+
+# --- Aggregation to control intensity ----------------------------------------
+# Equal weight: the six dimensions sum to a total between 6 and 30, which falls
+# into one control-intensity band. Overrides can then raise (never lower) the band.
+aggregation:
+  method: sum
+  bands:
+    - level: C1
+      name: Minimal
+      min: 6
+      max: 10
+      summary: Light-touch. Standard engineering controls are enough.
+    - level: C2
+      name: Standard
+      min: 11
+      max: 16
+      summary: Documented controls, an accountable owner, periodic review.
+    - level: C3
+      name: Enhanced
+      min: 17
+      max: 22
+      summary: Human-in-the-loop, active monitoring, frequent re-assessment.
+    - level: C4
+      name: Critical
+      min: 23
+      max: 30
+      summary: Per-action authorization, continuous oversight, board visibility.
+
+  # A single extreme dimension can force a higher floor regardless of the total,
+  # because some risks are categorical, not additive.
+  overrides:
+    - dimension: action_space
+      at_least: 5
+      floor: C4
+      reason: Acting on the outside world (payments, irreversible orders) is never light-touch.
+    - dimension: reversibility
+      at_least: 5
+      floor: C3
+      reason: Irreversible external effects require a human in the loop at minimum.
+    - dimension: data_sensitivity
+      at_least: 5
+      floor: C3
+      reason: Special-category data or secrets require enhanced controls at minimum.
+
+# --- Minimum controls per band -----------------------------------------------
+# What each control-intensity level demands, at minimum. Higher levels include
+# the intent of the lower ones; only the additive minimums are listed here.
+controls:
+  C1:
+    - Owner recorded in the agent registry.
+    - Standard logging; errors surfaced to the owning team.
+    - Re-assess on any material change.
+  C2:
+    - Documented use-case intake and risk assessment on file.
+    - A named accountable owner signs off before go-live.
+    - Operational KPIs monitored; re-assessment at least annually.
+  C3:
+    - Human-in-the-loop for in-scope actions (explicit approve/reject).
+    - Daily log review against thresholds, with alerting on breaches.
+    - Independent (2nd-line) review before go-live; re-assessment quarterly.
+    - Documented rollback and kill-switch procedure.
+  C4:
+    - Per-action pre-authorization by an accountable human.
+    - Continuous monitoring with real-time alerting and a tamper-evident audit trail.
+    - 2nd-line and, where relevant, 3rd-line review; re-assessment at least quarterly.
+    - Tested kill-switch and incident runbook; visibility at the governance board.

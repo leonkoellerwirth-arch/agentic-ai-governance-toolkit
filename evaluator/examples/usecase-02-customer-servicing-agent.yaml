@@ -1,0 +1,13 @@
+# Fictional use case — Nordbank (a fictional regional bank).
+# An agent that handles routine customer-servicing requests end to end in the CRM.
+name: Customer-servicing agent
+description: >-
+  Resolves routine servicing requests (address changes, standing-order edits) by updating the CRM
+  system of record within a pre-approved scope, with staff spot-checking a sample.
+scores:
+  autonomy: 3        # acts within a narrow, pre-approved scope; humans spot-check
+  action_space: 3    # writes to the CRM system of record
+  reversibility: 3   # corrections need a manual, tracked process
+  data_sensitivity: 3  # personal customer data (GDPR-relevant)
+  explainability: 3  # model-driven, each step logged and attributable
+  blast_radius: 3    # affects a defined customer segment
