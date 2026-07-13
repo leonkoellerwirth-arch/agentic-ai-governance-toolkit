@@ -1,0 +1,20 @@
+# Python
+.venv/
+__pycache__/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+
+# Environment / secrets (contract is .env.example)
+.env
+
+# Local tooling / editor
+.DS_Store
+uv.lock
+.claude/settings.local.json
+
+# Internal working material — never publish the briefing (enforced by scripts/gate.sh)
+CLAUDE-CODE-BRIEFING-*.md

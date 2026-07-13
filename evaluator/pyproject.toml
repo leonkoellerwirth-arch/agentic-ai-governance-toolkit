@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-evaluator"
+version = "0.1.0"
+description = "Risk scoring, policy checks, and log analysis for governing AI agents in regulated organizations."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Leon Köllerwirth Hlihel" }]
+keywords = ["ai-governance", "agents", "risk", "eu-ai-act", "dora"]
+dependencies = [
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "rich>=13.7",
+]
+
+[project.optional-dependencies]
+# The LLM-judge pattern is optional — the core evaluator runs without it.
+llm = ["ollama>=0.3"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[project.scripts]
+agent-eval = "agent_evaluator.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+agent_evaluator = ["py.typed", "rubric.yaml"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "slow: exercises a real model/LLM; excluded from the gate and CI (run locally with -m slow).",
+]

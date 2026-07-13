@@ -1,0 +1,9 @@
+# Keeps dependencies and pinned GitHub Actions fresh. The Python project lives under evaluator/.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/evaluator"
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: weekly }
