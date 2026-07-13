@@ -27,6 +27,13 @@ where possible.)_
 
 Newest first. Each: date · decision · why · (superseded by …).
 
+- **2026-07-13 — Released v0.1.0.** First public version, all seven milestones built and
+  CI-green. Signed wheel/sdist + SBOM via the release workflow. Known limitations named in the
+  README (reference pattern, not legal advice, illustrative rubric, evaluator not a product).
+- **2026-07-13 — Dependabot removed.** Owner preference (unwanted PRs/notifications). Supply-chain
+  safety stays in CI via pip-audit + gitleaks, which open no PRs.
+- **2026-07-13 — Diagrams ship as embedded Mermaid + `.mmd` sources, no pre-rendered SVGs.** GitHub
+  renders Mermaid natively (briefing §4.1); SVG tooling was not available and would add stale blobs.
 - **2026-07-13 — Python project lives under `evaluator/`.** Faithful to the briefing's
   `evaluator/` subproject (own pyproject + README). `scripts/gate.sh` and `.github/workflows/ci.yml`
   are tailored to run the Python surface there instead of at the repo root.
