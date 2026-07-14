@@ -170,4 +170,8 @@ flowchart TD
     E --> M
 ```
 
-The Mermaid sources are in [`diagrams/`](diagrams/); the blocks above render natively on GitHub.
+The blocks above render natively on GitHub. The [`diagrams/`](diagrams/) folder holds the Mermaid
+sources (`.mmd`, the source of truth) and pre-rendered `.svg` versions
+([lifecycle](diagrams/lifecycle-bpmn.svg) · [triage](diagrams/triage-flow.svg) ·
+[escalation](diagrams/escalation-paths.svg)) for use outside GitHub; regenerate them with
+`./scripts/render-diagrams.sh`.

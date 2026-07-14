@@ -96,7 +96,6 @@ This is the first public release (v0.1.0). What it deliberately does **not** do:
 - **The `llm_judge` is a demonstration.** It shows the LLM-as-judge control; it is not evaluated,
   calibrated, or hardened for production, and the core evaluator never depends on it.
 - **Checklists are not exhaustive.** They cover the agent-relevant themes, not every obligation.
-- **Diagrams render via embedded Mermaid on GitHub;** pre-rendered SVGs are not shipped.
 - **All examples are fictional.** No real organizational data or customer detail appears anywhere.
 
 Feedback and issues are welcome.
