@@ -55,7 +55,8 @@ jobs:
       - run: pip install -e "./evaluator[dev]"
       - name: Audit dependencies for known CVEs
         run: |
-          pip install pip-audit
+          # Patch the runner's build tooling first — setuptools < 83.0.0 has PYSEC-2026-3447.
+          pip install --upgrade "setuptools>=83.0.0" pip-audit
           pip-audit
 
   # Authoritative secret scan — full history, driven by .gitleaks.toml.
