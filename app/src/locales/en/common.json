@@ -1,5 +1,31 @@
 {
   "title": "AI Governance Console",
-  "tagline": "Interactive risk assessment over the toolkit's scoring rubric — runs fully in your browser, offline.",
-  "disclaimer": "A reference pattern, not a product or legal advice. Scores are illustrative and mirror the evaluator CLI."
+  "tagline": "Score an AI agent on six risk dimensions and read off the control intensity it needs — runs fully in your browser, offline.",
+  "disclaimer": "A reference pattern, not a product or legal advice. Scores are illustrative and mirror the evaluator CLI.",
+  "lead": "This tool helps you judge how much oversight an AI agent needs — based on what it can do and what could go wrong if it acts. Answer six plain questions; the result is a control level from C1 (light-touch) to C4 (critical), with the minimum safeguards each level asks for.",
+  "levelScale": "C1 light-touch · C2 standard · C3 enhanced · C4 critical",
+  "presets": {
+    "label": "Load a fictional example",
+    "placeholder": "Load a fictional example…"
+  },
+  "nav": {
+    "back": "Back",
+    "next": "Next",
+    "seeResult": "See result",
+    "startOver": "Start over"
+  },
+  "assessment": {
+    "intro": "Rate the agent 1–5 on each dimension against the statement that fits best.",
+    "step": "Step {{current}} of {{total}}",
+    "runningTotal": "Running total {{total}} / {{max}}",
+    "answeredHint": "Select a statement to continue."
+  },
+  "result": {
+    "heading": "Required control intensity",
+    "total": "{{total}} / {{max}}",
+    "baseWas": "Score alone lands in {{level}}; an override raised it.",
+    "overrides": "Overrides applied",
+    "controls": "Minimum controls",
+    "rationale": "Rationale"
+  }
 }
