@@ -86,3 +86,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          # Required so the action can enumerate PR commits via the API (breaking change in the
+          # action). Pushes to main scanned fine without it; the first PR surfaced the gap.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
