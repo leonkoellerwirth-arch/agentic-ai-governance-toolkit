@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AI Governance Console">
+  <rect width="512" height="512" rx="96" fill="#0b0b0b" />
+  <path
+    d="M256 88 152 132v120c0 78 44 132 104 172 60-40 104-94 104-172V132L256 88Z"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="22"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M212 258l32 32 60-72"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="24"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
