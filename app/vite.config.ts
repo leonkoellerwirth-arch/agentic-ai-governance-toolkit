@@ -1,12 +1,27 @@
 import { defineConfig } from "vitest/config";
-import { loadEnv } from "vite";
+import { loadEnv, type Plugin } from "vite";
 import { readFileSync } from "node:fs";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { parse as parseYaml } from "yaml";
 import path from "node:path";
 
 const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+
+// Import *.yaml as a parsed JS object at build time. This is what lets the console read the
+// evaluator's rubric.yaml as the single source of truth (INV-1) without a committed copy. We
+// carry a tiny plugin instead of a third-party one to keep the dependency (js-yaml) with its
+// known merge-key advisories out of the tree — the maintained `yaml` parser has none.
+function yamlPlugin(): Plugin {
+  return {
+    name: "governance-console:yaml",
+    transform(code, id) {
+      if (!/\.ya?ml$/.test(id)) return null;
+      return { code: `export default ${JSON.stringify(parseYaml(code))};`, map: null };
+    },
+  };
+}
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname), "");
@@ -16,6 +31,7 @@ export default defineConfig(({ command, mode }) => {
     base: basePath,
     resolve: { alias: { "@": path.resolve(__dirname, "src") } },
     plugins: [
+      yamlPlugin(),
       react(),
       tailwindcss(),
       VitePWA({
@@ -60,7 +76,9 @@ export default defineConfig(({ command, mode }) => {
         },
       },
     },
-    server: { port: 5273 },
+    // The rubric.yaml lives in the sibling evaluator/ tree, outside app/. Allow the dev server to
+    // read it (build/vitest resolve it directly and are unaffected by this).
+    server: { port: 5273, fs: { allow: [path.resolve(__dirname, "..")] } },
     define: {
       __DEV__: JSON.stringify(command !== "build"),
       __APP_VERSION__: JSON.stringify(pkg.version),
