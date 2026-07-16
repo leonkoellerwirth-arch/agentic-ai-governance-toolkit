@@ -4,8 +4,8 @@
 # gate you run locally (CONSTITUTION §4: "CI mirrors the local gate exactly"). Never duplicate
 # ruff/pytest invocations here; if a check belongs in CI, it belongs in the gate.
 #
-# Zero-trust: actions are pinned to a full commit SHA (a tag is mutable, a SHA is not) and
-# `dependabot.yml`'s github-actions ecosystem keeps these pins fresh.
+# Zero-trust: actions are pinned to a full commit SHA (a tag is mutable, a SHA is not). Dependabot
+# is intentionally off in this repo (BIBLE decision), so pins are refreshed deliberately, by hand.
 name: CI
 
 on:
@@ -37,9 +37,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e "./evaluator[dev]"
+      # Node is needed so the gate's web surface (app/ — verify:ci) runs instead of being skipped.
+      # The gate only exercises app/ when app/node_modules is present, so install it before the gate.
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci --prefix app
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y shellcheck
-      - name: Hard gate (lint · format · tests · guardrails · shellcheck)
+      - name: Hard gate (lint · format · tests · guardrails · shellcheck · web verify:ci)
         run: ./scripts/gate.sh
 
   supply-chain:
@@ -53,11 +61,20 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e "./evaluator[dev]"
-      - name: Audit dependencies for known CVEs
+      - name: Audit Python dependencies for known CVEs
         run: |
           # Patch the runner's build tooling first — setuptools < 83.0.0 has PYSEC-2026-3447.
           pip install --upgrade "setuptools>=83.0.0" pip-audit
           pip-audit
+      # Node surface — mirror the pip-audit intent for app/. Gate on high/critical only so a
+      # low-severity transitive advisory in dev tooling doesn't turn CI red without a real fix.
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Audit app dependencies for known CVEs
+        run: npm audit --prefix app --audit-level=high
 
   # Authoritative secret scan — full history, driven by .gitleaks.toml.
   secret-scan:
