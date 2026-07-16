@@ -1,5 +1,31 @@
 {
   "title": "AI Governance Console",
-  "tagline": "Interaktive Risikobewertung auf Basis der Scoring-Rubric des Toolkits — läuft vollständig im Browser, offline.",
-  "disclaimer": "Ein Referenzmuster, kein Produkt und keine Rechtsberatung. Die Bewertungen sind illustrativ und spiegeln das Evaluator-CLI."
+  "tagline": "Bewerten Sie einen KI-Agenten anhand von sechs Risiko-Dimensionen und lesen Sie ab, wie viel Kontrolle er braucht — läuft vollständig im Browser, offline.",
+  "disclaimer": "Ein Referenzmuster, kein Produkt und keine Rechtsberatung. Die Bewertungen sind illustrativ und spiegeln das Evaluator-CLI.",
+  "lead": "Dieses Werkzeug hilft einzuschätzen, wie viel Aufsicht ein KI-Agent braucht — abhängig davon, was er tun kann und was schiefgehen könnte, wenn er handelt. Sechs einfache Fragen; das Ergebnis ist eine Kontrollstufe von C1 (leicht) bis C4 (kritisch), mit den jeweils mindestens nötigen Schutzmaßnahmen.",
+  "levelScale": "C1 leicht · C2 standard · C3 erhöht · C4 kritisch",
+  "presets": {
+    "label": "Fiktives Beispiel laden",
+    "placeholder": "Fiktives Beispiel laden…"
+  },
+  "nav": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "seeResult": "Ergebnis anzeigen",
+    "startOver": "Neu beginnen"
+  },
+  "assessment": {
+    "intro": "Bewerten Sie den Agenten je Dimension mit 1–5 anhand der am besten passenden Aussage.",
+    "step": "Schritt {{current}} von {{total}}",
+    "runningTotal": "Zwischensumme {{total}} / {{max}}",
+    "answeredHint": "Wählen Sie eine Aussage, um fortzufahren."
+  },
+  "result": {
+    "heading": "Erforderliche Kontroll-Intensität",
+    "total": "{{total}} / {{max}}",
+    "baseWas": "Die reine Punktzahl ergäbe {{level}}; eine Übersteuerung hat sie angehoben.",
+    "overrides": "Angewandte Übersteuerungen",
+    "controls": "Mindest-Kontrollen",
+    "rationale": "Begründung"
+  }
 }
