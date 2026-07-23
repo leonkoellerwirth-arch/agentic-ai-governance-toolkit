@@ -10,6 +10,9 @@ All notable changes to this project are documented here. The format follows
 
 - Pre-rendered `.svg` versions of the three lifecycle diagrams, plus `scripts/render-diagrams.sh`
   to regenerate them from the `.mmd` sources.
+- **Governance console** (`app/`): a static Vite/React surface for the risk assessment. It reads the
+  same `rubric.yaml` as the evaluator (INV-1), walks the dimensions interactively, and shows the
+  resulting risk class. Built and linted in the gate alongside the Python surface.
 
 ## [0.1.0] — 2026-07-13
 
