@@ -109,4 +109,7 @@ Dual-licensed: source code under the **MIT License**, documentation and artifact
 
 **Leon Köllerwirth Hlihel** — Interim IT leader & principal consultant for AI governance and agentic
 AI operating models, enterprise architecture in regulated environments (BaFin/DORA).
-Website: [leonkoellerwirth.de](https://leonkoellerwirth.de).
+[leon-koellerwirth.com](https://leon-koellerwirth.com) ·
+[LinkedIn](https://www.linkedin.com/in/leon-k%C3%B6llerwirth-hlihel-642506197/) ·
+Sister repository: [rag-approval-blueprint](https://github.com/leonkoellerwirth-arch/rag-approval-blueprint)
+— the approval file and control set for getting a RAG assistant live in a regulated organization.
