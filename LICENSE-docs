@@ -1,0 +1,48 @@
+# Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Copyright (c) 2026 Leon Köllerwirth Hlihel
+
+This repository is **dual-licensed**:
+
+- **Source code** — everything under `evaluator/`, all files in `scripts/`, and any other
+  executable code — is licensed under the MIT License. See [`LICENSE`](LICENSE).
+- **Documentation and artifacts** — everything under `docs/` and `templates/`, the
+  checklists, the risk model, the diagrams, and the prose in the Markdown files — is
+  licensed under the Creative Commons Attribution 4.0 International License, set out below.
+
+When in doubt about a single file: if it runs, it is MIT; if it is read, it is CC BY 4.0.
+
+`SPDX-License-Identifier: MIT AND CC-BY-4.0`
+
+---
+
+You are free to:
+
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material for any purpose, even
+  commercially
+
+Under the following terms:
+
+- **Attribution** — You must give appropriate credit, provide a link to the license, and
+  indicate if changes were made. You may do so in any reasonable manner, but not in any way
+  that suggests the licensor endorses you or your use.
+- **No additional restrictions** — You may not apply legal terms or technological measures
+  that legally restrict others from doing anything the license permits.
+
+Full license text: <https://creativecommons.org/licenses/by/4.0/legalcode>
+Human-readable summary: <https://creativecommons.org/licenses/by/4.0/>
+
+**Attribution example:**
+
+> Based on *agentic-ai-governance-toolkit* by Leon Köllerwirth Hlihel (CC BY 4.0),
+> <https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit>
+
+Templates in this repository are meant to be filled in and adapted inside your own
+organization. Doing so does not oblige you to publish the result — attribution applies to
+redistribution of the templates themselves, not to internal use of the documents you write
+with them.
+
+**Note:** the license covers copyright. It carries no warranty and no assertion that use of
+these artifacts satisfies any legal or supervisory obligation. See
+[`DISCLAIMER.md`](DISCLAIMER.md).

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/code-MIT-yellow.svg)](LICENSE)
-[![Docs: CC BY 4.0](https://img.shields.io/badge/docs-CC%20BY%204.0-lightgrey.svg)](LICENSE)
+[![Docs: CC BY 4.0](https://img.shields.io/badge/docs-CC%20BY%204.0-lightgrey.svg)](LICENSE-docs)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 
@@ -102,8 +102,10 @@ Feedback and issues are welcome.
 
 ## License
 
-Dual-licensed: source code under the **MIT License**, documentation and artifacts under
-**CC BY 4.0**. See [`LICENSE`](LICENSE) and [`DISCLAIMER.md`](DISCLAIMER.md).
+Dual-licensed: source code (`evaluator/`, `scripts/`) under the [MIT License](LICENSE);
+documentation and artifacts (`docs/`, `templates/`, the checklists and the risk model) under
+[CC BY 4.0](LICENSE-docs). If it runs, it is MIT; if it is read, it is CC BY 4.0. See also
+[`DISCLAIMER.md`](DISCLAIMER.md).
 
 ## Who is behind this
 
