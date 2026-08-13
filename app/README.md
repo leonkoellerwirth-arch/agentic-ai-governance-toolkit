@@ -4,9 +4,13 @@ A local, offline-capable web console for the agentic-ai-governance-toolkit. It w
 through the six risk dimensions of the toolkit's scoring rubric and computes the C1–C4 control
 band **in the browser**, mirroring the `agent-eval score` CLI.
 
-> **A reference pattern, not a product.** This is a readable, adaptable work sample — not a
-> deployable compliance tool and not legal advice. The rubric and scores are illustrative. See the
-> repository `README.md` and `DISCLAIMER.md`.
+> **A check tool, not a certification.** It helps you reason about how much control an agent needs;
+> it does not certify that any agent, system, or organization complies with anything. The
+> thresholds between the bands are reasoned practitioner judgement, not a calibrated standard, and
+> nothing here is legal advice. See the repository `README.md` and `DISCLAIMER.md`.
+>
+> This wording holds whether the console is run locally or served from a public URL. Publishing it
+> does not upgrade it into a compliance product, and the banner says so on every screen.
 
 ## Design invariants
 

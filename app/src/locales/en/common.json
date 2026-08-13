@@ -1,7 +1,7 @@
 {
   "title": "AI Governance Console",
   "tagline": "Score an AI agent on six risk dimensions and read off the control intensity it needs — runs fully in your browser, offline.",
-  "disclaimer": "A reference pattern, not a product or legal advice. Scores are illustrative and mirror the evaluator CLI.",
+  "disclaimer": "A check tool, not a certification. The thresholds are reasoned practitioner judgement, not a calibrated standard — and not legal advice.",
   "lead": "This tool helps you judge how much oversight an AI agent needs — based on what it can do and what could go wrong if it acts. Answer six plain questions; the result is a control level from C1 (light-touch) to C4 (critical), with the minimum safeguards each level asks for.",
   "levelScale": "C1 light-touch · C2 standard · C3 enhanced · C4 critical",
   "presets": {
