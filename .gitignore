@@ -18,3 +18,6 @@ uv.lock
 
 # Internal working material — never publish the briefing (enforced by scripts/gate.sh)
 CLAUDE-CODE-BRIEFING-*.md
+
+# Private working area — drafts and notes that are not part of the published toolkit
+local/
