@@ -11,6 +11,13 @@ logging/documentation — and points to where each maps in the EU AI Act (Regula
 > counsel and your compliance function. There is a German version:
 > [`eu-ai-act-agent-checklist.de.md`](eu-ai-act-agent-checklist.de.md).
 
+<!-- GENERATED:source_lock START — edit regulatory_sources.yaml, then run `agent-eval render-docs` -->
+> **Source lock.** The article references below point at **Regulation (EU) 2024/1689** (CELEX 32024R1689, OJ L, 2024/1689, 12.7.2024) — consolidated text 02024R1689-20260727, as of 2026-07-27.
+> Amended by **Regulation (EU) 2026/1744** (CELEX 32026R1744, OJ L, 2026/1744, 24.7.2026), in force 2026-07-27.
+> Last checked against the text on 2026-08-14: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727). Pinned in [`regulatory-sources.md`](regulatory-sources.md).
+> This records **which text**, not what it requires of you.
+<!-- GENERATED:source_lock END -->
+
 Fill the **Status** column with ✓ (done), ✗ (open), or n/a. Record where the evidence lives.
 
 ## 1. Classification — what kind of AI system is this?
@@ -55,6 +62,15 @@ Fill the **Status** column with ✓ (done), ✗ (open), or n/a. Record where the
 | 5.1 | A **risk management** approach covers the agent across its lifecycle (Art. 9 for high-risk — verify). | Risk assessment | Risk (2nd line) | ☐ |
 | 5.2 | An **accountable owner** is named and recorded in the agent registry. | Registry entry | Business (1st line) | ☐ |
 | 5.3 | **Re-assessment** is scheduled and triggered by material change (model, autonomy, data, action space). | Re-assessment plan | Risk (2nd line) | ☐ |
+
+## 6. Incidents and life after go-live
+
+| # | Criterion | Evidence | Responsible | Status |
+|:-:|-----------|----------|-------------|:------:|
+| 6.1 | What counts as a **serious incident** for this agent is defined, and the monitoring to notice one is in place (reporting of a serious incident, Art. 73 for high-risk — verify). See [incident response](../05-monitoring/incident-response.md). | Incident definition | Risk (2nd line) | ☐ |
+| 6.2 | **Reporting paths** are named, time-bound, and have been walked through — not only written down (Art. 73 — verify). | Reporting plan + rehearsal record | Risk (2nd line) | ☐ |
+| 6.3 | **Post-market monitoring** of the agent in real use feeds back into re-assessment (post-market monitoring system, Art. 72 for high-risk — verify). See [KPI catalog](../05-monitoring/kpi-catalog.md). | Monitoring plan | AI team | ☐ |
+| 6.4 | **Provider and model dependency** is recorded, and a provider-side change triggers re-assessment. See [provider dependency](../04-operating-model/provider-dependency.md). | Registry entry | AI team | ☐ |
 
 ---
 

@@ -12,6 +12,13 @@ diese in der KI-Verordnung (Verordnung (EU) 2024/1689) verortet sind.
 > qualifizierter Rechtsberatung und Ihrer Compliance-Funktion. Englische Fassung:
 > [`eu-ai-act-agent-checklist.en.md`](eu-ai-act-agent-checklist.en.md).
 
+<!-- GENERATED:source_lock START — edit regulatory_sources.yaml, then run `agent-eval render-docs` -->
+> **Fassungsstand.** Die Artikelverweise unten beziehen sich auf **Verordnung (EU) 2024/1689** (CELEX 32024R1689, ABl. L, 2024/1689, 12.7.2024) — konsolidierte Fassung 02024R1689-20260727, Stand 2026-07-27.
+> Geändert durch **Verordnung (EU) 2026/1744** (CELEX 32026R1744, ABl. L, 2026/1744, 24.7.2026), in Kraft seit 2026-07-27.
+> Zuletzt am 2026-08-14 gegen den Text geprüft: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727). Festgehalten in [`regulatory-sources.md`](regulatory-sources.md).
+> Das hält fest, **welcher Text** gilt — nicht, was er von Ihnen verlangt.
+<!-- GENERATED:source_lock END -->
+
 Tragen Sie in **Status** ein: ✓ (erledigt), ✗ (offen) oder n/z. Vermerken Sie, wo der Nachweis liegt.
 
 ## 1. Klassifizierung — welche Art von KI-System ist das?
@@ -56,6 +63,15 @@ Tragen Sie in **Status** ein: ✓ (erledigt), ✗ (offen) oder n/z. Vermerken Si
 | 5.1 | Ein **Risikomanagement** deckt den Agenten über den Lebenszyklus ab (Art. 9 bei Hochrisiko — prüfen). | Risikobewertung | Risiko (2nd Line) | ☐ |
 | 5.2 | Ein **verantwortlicher Owner** ist benannt und im Agenten-Register erfasst. | Registereintrag | Business (1st Line) | ☐ |
 | 5.3 | **Re-Assessment** ist geplant und wird durch wesentliche Änderungen ausgelöst (Modell, Autonomie, Daten, Aktionsraum). | Re-Assessment-Plan | Risiko (2nd Line) | ☐ |
+
+## 6. Vorfälle und das Leben nach dem Go-live
+
+| # | Kriterium | Nachweis | Verantwortlich | Status |
+|:-:|-----------|----------|----------------|:------:|
+| 6.1 | Was für diesen Agenten ein **schwerwiegender Vorfall** ist, ist definiert — und die Überwachung, um einen zu bemerken, existiert (Meldung schwerwiegender Vorfälle, Art. 73 bei Hochrisiko — prüfen). Siehe [Incident Response](../05-monitoring/incident-response.md). | Vorfalldefinition | Risiko (2nd Line) | ☐ |
+| 6.2 | **Meldewege** sind benannt, terminiert und einmal durchgespielt — nicht nur aufgeschrieben (Art. 73 — prüfen). | Meldeplan + Übungsprotokoll | Risiko (2nd Line) | ☐ |
+| 6.3 | **Beobachtung nach dem Inverkehrbringen** fließt in das Re-Assessment zurück (System zur Beobachtung nach dem Inverkehrbringen, Art. 72 bei Hochrisiko — prüfen). Siehe [KPI-Katalog](../05-monitoring/kpi-catalog.md). | Monitoring-Plan | KI-Team | ☐ |
+| 6.4 | **Anbieter- und Modellabhängigkeit** ist erfasst, und eine anbieterseitige Änderung löst ein Re-Assessment aus. Siehe [Anbieterabhängigkeit](../04-operating-model/provider-dependency.md). | Registereintrag | KI-Team | ☐ |
 
 ---
 

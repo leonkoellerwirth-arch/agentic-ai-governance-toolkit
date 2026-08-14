@@ -11,6 +11,12 @@ IKT-Drittdienstleister-Abhängigkeit; DORAs Resilienz-Disziplin gilt für ihn wi
 > Hinweise, die gegen den aktuellen Rechtstext** und die einschlägigen RTS/ITS zu prüfen sind.
 > Englische Fassung: [`dora-ict-risk-checklist.en.md`](dora-ict-risk-checklist.en.md).
 
+<!-- GENERATED:source_lock START — edit regulatory_sources.yaml, then run `agent-eval render-docs` -->
+> **Fassungsstand.** Die Artikelverweise unten beziehen sich auf **Verordnung (EU) 2022/2554** (CELEX 32022R2554, ABl. L 333, 27.12.2022, S. 1–79) — Stand 2022-12-27.
+> Zuletzt am 2026-08-14 gegen den Text geprüft: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554). Festgehalten in [`regulatory-sources.md`](regulatory-sources.md).
+> Das hält fest, **welcher Text** gilt — nicht, was er von Ihnen verlangt.
+<!-- GENERATED:source_lock END -->
+
 Tragen Sie in **Status** ein: ✓ (erledigt), ✗ (offen) oder n/z.
 
 ## 1. IKT-Risikomanagement und Inventar
