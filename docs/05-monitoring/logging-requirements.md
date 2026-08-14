@@ -43,8 +43,15 @@ One line per event; the audit trail is a stream of these. This is the shape the 
 [`log_analyzer`](../../evaluator/README.md) reads.
 
 ```json
-{"timestamp": "2026-01-15T09:31:07Z", "agent_id": "servicing-agent", "version": "2.3.0", "run_id": "r-8842", "step_id": "s-3", "event_type": "gate_decision", "actor": "human:clerk-014", "action": "update_address", "action_in_scope": true, "outcome": "success", "model": "local-llm", "data_categories": ["personal"], "human_decision": "approve", "correlation_id": "case-55231"}
+{"timestamp": "2026-01-15T09:31:07Z", "agent_id": "DEMO-servicing-agent", "version": "2.3.0", "run_id": "DEMO-run-8842", "step_id": "DEMO-step-3", "event_type": "gate_decision", "actor": "human:DEMO-user-001", "action": "update_address", "action_in_scope": true, "outcome": "success", "model": "local-llm", "data_categories": ["personal"], "human_decision": "approve", "correlation_id": "DEMO-case-55231"}
 ```
+
+> **Why every identifier says `DEMO-`.** A log line is the most copied artifact in any governance
+> document: it is concrete, it looks operational, and it travels well in a screenshot. An example
+> carrying `"actor": "human:clerk-014"` reads as a real personnel number and gets reused as one —
+> which is not the reader's mistake. Identifiers in every example here are prefixed so that no
+> reader, and no secret scanner, can mistake them for production data. Use the same convention in
+> your own documentation; drop it in your actual logs.
 
 ## Retention and access
 
