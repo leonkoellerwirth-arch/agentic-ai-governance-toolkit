@@ -70,10 +70,10 @@ agent-eval log-analyze  --input evaluator/examples/logs-sample.jsonl \
 | Area | Artifact |
 |------|----------|
 | **Lifecycle** | [Seven-phase lifecycle](docs/01-agent-lifecycle/lifecycle-overview.md) with [Mermaid diagrams](docs/01-agent-lifecycle/diagrams/) (swimlanes, triage flow, escalation paths) |
-| **Risk** | [Risk model](docs/02-risk-assessment/agent-risk-model.md) · [scoring rubric](docs/02-risk-assessment/scoring-rubric.md) · [worked examples](docs/02-risk-assessment/examples/) (C1, C3, C4-by-override) |
-| **Checklists** | EU AI Act ([EN](docs/03-checklists/eu-ai-act-agent-checklist.en.md) · [DE](docs/03-checklists/eu-ai-act-agent-checklist.de.md)) · DORA ([EN](docs/03-checklists/dora-ict-risk-checklist.en.md) · [DE](docs/03-checklists/dora-ict-risk-checklist.de.md)) · [go-live readiness](docs/03-checklists/go-live-readiness.md) |
-| **Operating model** | [Roles & RACI](docs/04-operating-model/roles-and-raci.md) · [decision rights](docs/04-operating-model/decision-rights.md) · [committee templates](docs/04-operating-model/committee-templates.md) |
-| **Monitoring** | [KPI catalog](docs/05-monitoring/kpi-catalog.md) · [logging requirements](docs/05-monitoring/logging-requirements.md) |
+| **Risk** | [Risk model](docs/02-risk-assessment/agent-risk-model.md) · [scoring rubric](docs/02-risk-assessment/scoring-rubric.md) · [policy decisions](docs/02-risk-assessment/policy-decisions.md) · [worked examples](docs/02-risk-assessment/examples/) (C1, C3, C4-by-override) |
+| **Checklists** | EU AI Act ([EN](docs/03-checklists/eu-ai-act-agent-checklist.en.md) · [DE](docs/03-checklists/eu-ai-act-agent-checklist.de.md)) · DORA ([EN](docs/03-checklists/dora-ict-risk-checklist.en.md) · [DE](docs/03-checklists/dora-ict-risk-checklist.de.md)) · [go-live readiness](docs/03-checklists/go-live-readiness.md) · [regulatory sources](docs/03-checklists/regulatory-sources.md) |
+| **Operating model** | [Roles & RACI](docs/04-operating-model/roles-and-raci.md) · [decision rights](docs/04-operating-model/decision-rights.md) · [committee templates](docs/04-operating-model/committee-templates.md) · [provider dependency](docs/04-operating-model/provider-dependency.md) |
+| **Monitoring** | [KPI catalog](docs/05-monitoring/kpi-catalog.md) · [logging requirements](docs/05-monitoring/logging-requirements.md) · [incident response](docs/05-monitoring/incident-response.md) |
 | **Evaluator** | [Python tool](evaluator/README.md): risk scoring, policy checks, log analysis, optional LLM judge |
 | **Templates** | [Use-case intake](templates/use-case-intake.md) · [agent registry entry](templates/agent-registry-entry.md) · [decommissioning protocol](templates/decommissioning-protocol.md) |
 

@@ -8,11 +8,41 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Regulatory source lock** (INV-5): `evaluator/src/agent_evaluator/regulatory_sources.yaml` pins
+  every article the checklists cite to an act, a CELEX id, an Official Journal citation, and the
+  consolidated version it was last checked against — with the EUR-Lex URLs of that check. Each
+  checklist now carries a generated source-lock header, and
+  [`docs/03-checklists/regulatory-sources.md`](docs/03-checklists/regulatory-sources.md) renders the
+  full registry. `test_regulatory_sources.py` fails if a checklist cites an article the lock does
+  not carry, or if the lock carries one no checklist cites. The lock records **which text applies**
+  — never deadlines, penalties, or what an obligation requires.
+- **Policy-decision register** (INV-6): `evaluator/src/agent_evaluator/policy_decisions.yaml` records
+  every threshold that is a judgement call rather than a derivation — the reasoning, the external
+  support where any exists, and **what the choice accepts as a cost**. Rendered to
+  [`docs/02-risk-assessment/policy-decisions.md`](docs/02-risk-assessment/policy-decisions.md). The
+  thresholds needing cover are computed from `rubric.yaml`, so a new band or override cannot land
+  without its decision, and `test_policy_decisions.py` fails either way round.
+- **Incident response** (docs/05): sector-independent handling for agent incidents — what counts as
+  one, severity by control level, a five-step runbook, stop/rollback expectations per level, and the
+  scenarios worth rehearsing. Previously this existed only in the DORA checklist, which binds
+  defined financial entities.
+- **Provider and model dependency** (docs/04): what to record per agent, concentration at the
+  organization level, the three ways a provider changes underneath you, and exit expectations by
+  control level. Also previously DORA-only.
+- **Incident section in the EU AI Act checklist** (EN + DE): serious-incident definition and
+  reporting paths, post-market monitoring feeding re-assessment, and provider-change triggers.
+
 - Pre-rendered `.svg` versions of the three lifecycle diagrams, plus `scripts/render-diagrams.sh`
   to regenerate them from the `.mmd` sources.
 - **Governance console** (`app/`): a static Vite/React surface for the risk assessment. It reads the
   same `rubric.yaml` as the evaluator (INV-1), walks the dimensions interactively, and shows the
   resulting risk class. Built and linted in the gate alongside the Python surface.
+
+### Changed
+
+- Every identifier in the logging examples now carries a `DEMO-` prefix, and the convention is
+  stated where the example lives. A log line is the most copied artifact in a governance document;
+  `"actor": "human:clerk-014"` read as a real personnel number and got reused as one.
 
 ## [0.1.0] — 2026-07-13
 
