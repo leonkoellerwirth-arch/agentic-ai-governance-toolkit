@@ -1,0 +1,163 @@
+# =============================================================================
+# THE REGISTER OF JUDGEMENT CALLS.
+#
+# Every threshold in a rubric is one of two things:
+#
+#   DERIVED       — traceable to a demand the toolkit already makes elsewhere.
+#                   Recorded in the rubric itself (`derived_from`, `reason`).
+#   POLICY        — a judgement call. Recorded HERE, with its rationale, what it
+#                   accepts as a cost, and whether anything outside this project
+#                   supports it.
+#
+# Nothing may be neither. `agent_evaluator.policy` computes the thresholds that
+# need covering straight from the rubric files, so adding a band or an override
+# without recording the decision fails the check — and a decision pointing at a
+# threshold that no longer exists fails it too.
+#
+# Why this file exists: the README says the thresholds are "a starting point, not
+# a calibrated standard". That sentence is honest but unhelpful to someone who has
+# to defend a control level in a review. This file is the long version — which
+# numbers are judgement, whose judgement, and what each one gets wrong on purpose.
+#
+# `external_support` is deliberately mostly empty. A judgement call with an
+# invented citation is worse than one that admits it is a judgement call.
+#
+# Read by:   agent_evaluator.policy
+# Rendered:  docs/02-risk-assessment/policy-decisions.md
+#            → run `agent-eval render-docs` after editing.
+# Tested:    evaluator/tests/test_policy_decisions.py
+# =============================================================================
+
+version: 1
+title: Policy decisions
+
+decisions:
+  - id: PD-DIMENSIONS-001
+    target: rubric.yaml#dimensions
+    decision: Six dimensions, each scored 1–5 against observable anchors.
+    rationale:
+      - >-
+        Each dimension names something a reviewer can ask for evidence about and be
+        told no. "How autonomous is it?" is answerable; "how mature are you?" is not.
+      - >-
+        Five steps: three collapses everything interesting into the middle, seven
+        invites a precision the anchors cannot carry.
+      - >-
+        These six change what controls an agent needs. Cost, business value, and
+        model quality do not, and are deliberately absent.
+    external_support: []
+    accepted_cost: >-
+      The dimensions are not independent — an agent with a wide action space usually
+      also scores high on blast radius. Summing them treats correlated risk as if it
+      were additive, which counts some of it twice. The alternative (a weighted or
+      conditional model) would need calibration data that does not exist.
+    status: project_policy
+
+  - id: PD-SCALE-001
+    target: rubric.yaml#scale
+    decision: The scale runs 1–5, with 1 as the lowest meaningful score — not 0.
+    rationale:
+      - >-
+        Every agent in production has some autonomy, some action space, and some
+        blast radius. A zero would claim an absence that does not occur once an
+        agent is running.
+      - >-
+        The readiness rubric does the opposite and starts at R0, because "no control
+        at all" is a real and common state. Exposure and readiness are not symmetric.
+    external_support: []
+    accepted_cost: >-
+      The minimum total is 6, not 0, so the numbers do not read as a percentage. That
+      is intentional, but it does mean the total cannot be shared without the bands.
+    status: project_policy
+
+  - id: PD-AGG-001
+    target: rubric.yaml#aggregation.method
+    decision: Sum the six dimensions with equal weight.
+    rationale:
+      - >-
+        Weights would have to come from somewhere. There is no outcome data behind
+        this rubric, so any weighting would encode a preference while looking like a
+        measurement.
+      - >-
+        A sum can be recomputed by hand from the scored dimensions. Anyone in a review
+        can check the arithmetic without the tool.
+    external_support: []
+    accepted_cost: >-
+      Equal weight is itself a claim: it says explainability matters as much as blast
+      radius. It does not. The override rules are the correction — they let a single
+      categorical risk raise the floor without pretending the sum knew about it.
+    status: project_policy
+
+  - id: PD-BANDS-001
+    target: rubric.yaml#aggregation.bands
+    decision: Band boundaries at 10 / 16 / 22 — C1 6–10, C2 11–16, C3 17–22, C4 23–30.
+    rationale:
+      - >-
+        The cuts are placed so that an assistive agent scoring low across the board
+        lands in C1, an agent writing to a system of record under human approval lands
+        in C2–C3, and an agent that is high on several dimensions at once lands in C4.
+      - >-
+        C2 is deliberately the widest band. It is the band whose controls a normal
+        organization can actually staff, and most production agents belong there.
+    external_support: []
+    accepted_cost: >-
+      THIS IS THE LEAST DEFENSIBLE NUMBER IN THE RUBRIC, and it should be said first
+      rather than discovered. The boundaries are not calibrated against incident data,
+      because none was available. An agent scoring 16 and one scoring 17 differ by one
+      point and by an entire control regime, and nothing empirical distinguishes them.
+      Anyone applying this in anger should expect to move the cuts against their own
+      incident history — and should record it when they do, which is what this file is
+      for.
+    status: project_policy
+
+  - id: PD-OVERRIDE-ACTION-SPACE
+    target: rubric.yaml#aggregation.overrides.action_space
+    decision: An action space of 5 forces a floor of C4, whatever the total.
+    rationale:
+      - >-
+        Acting on the outside world — moving funds, sending an external message,
+        forming an obligation — is categorical, not additive. A low total does not
+        make an irreversible external act light-touch.
+    external_support: []
+    accepted_cost: >-
+      An otherwise trivial agent that can send one external message is governed like a
+      payments agent. Deliberate: the failure mode is the message, not the volume. The
+      cost is a control regime that will feel disproportionate to the team running it,
+      and that argument will be had repeatedly.
+    status: project_policy
+
+  - id: PD-OVERRIDE-REVERSIBILITY
+    target: rubric.yaml#aggregation.overrides.reversibility
+    decision: Reversibility of 5 forces a floor of C3.
+    rationale:
+      - >-
+        What cannot be undone must be stopped before it happens; that is a human in
+        the loop, which is where C3 starts.
+      - >-
+        C3 rather than C4 because irreversibility alone, without reach, affects one
+        case at a time. Reach is what blast radius scores.
+    external_support: []
+    accepted_cost: >-
+      An irreversible action with wide reach reaches C4 only via the total or the
+      action-space override. If both are low and the effect is still catastrophic, the
+      rubric under-rates it.
+    status: project_policy
+
+  - id: PD-OVERRIDE-DATA-SENSITIVITY
+    target: rubric.yaml#aggregation.overrides.data_sensitivity
+    decision: Data sensitivity of 5 forces a floor of C3.
+    rationale:
+      - >-
+        Special-category personal data and secrets carry duties that do not scale down
+        with how few records are touched.
+    external_support: []
+    accepted_cost: >-
+      Overrides only ever raise the floor, never lower it. An agent touching one
+      credential in a strictly bounded way gets C3 controls it may not need. That is
+      the cheaper error of the two, and the exception path exists for the rest.
+    status: project_policy
+
+# Decisions for the readiness rubric (aggregation by minimum, the required level per
+# control level, assurance staying at R1 for C2) land here when `readiness.yaml`
+# enters the source tree — the check computes what needs covering from the rubric
+# files that exist, so that rubric cannot arrive without them.
