@@ -21,7 +21,11 @@ from rich.table import Table
 from . import __version__
 from .llm_judge import JudgeUnavailable, judge_output
 from .log_analyzer import analyze_log_file
+from .policy import check_coverage
+from .policy import update_docs as update_policy_docs
 from .policy_check import PolicyCheckInput, check_policy, load_policy
+from .regulatory import check_references
+from .regulatory import update_docs as update_regulatory_docs
 from .risk_score import AgentAssessment, RiskResult, score_agent
 from .rubric import load_rubric, update_docs
 
@@ -72,14 +76,32 @@ def score(input_path: Path, as_json: bool) -> None:
 @main.command("render-docs")
 @click.option("--check", is_flag=True, help="Exit non-zero if docs are stale; write nothing.")
 def render_docs(check: bool) -> None:
-    """Regenerate the rubric tables in docs/ from rubric.yaml (the single source of truth)."""
-    changed = update_docs(write=not check)
+    """Regenerate the generated doc blocks from rubric.yaml and regulatory_sources.yaml."""
+    changed = (
+        update_docs(write=not check)
+        + update_regulatory_docs(write=not check)
+        + update_policy_docs(write=not check)
+    )
+    unpinned = check_references()
+    if unpinned:
+        raise click.ClickException(
+            "regulatory references are not pinned to regulatory_sources.yaml:\n  "
+            + "\n  ".join(unpinned)
+        )
+    uncovered = check_coverage()
+    if uncovered:
+        raise click.ClickException(
+            "rubric thresholds without a recorded decision:\n  " + "\n  ".join(uncovered)
+        )
     if check:
         if changed:
             raise click.ClickException(
                 f"stale docs: {', '.join(changed)} — run `agent-eval render-docs`"
             )
-        console.print("docs are consistent with rubric.yaml")
+        console.print(
+            "docs are consistent with rubric.yaml, regulatory_sources.yaml, "
+            "and policy_decisions.yaml"
+        )
     else:
         console.print(f"rewrote: {', '.join(changed)}" if changed else "docs already up to date")
 

@@ -30,7 +30,7 @@ agent-eval = "agent_evaluator.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-agent_evaluator = ["py.typed", "rubric.yaml"]
+agent_evaluator = ["py.typed", "rubric.yaml", "regulatory_sources.yaml", "policy_decisions.yaml"]
 
 [tool.ruff]
 line-length = 100
