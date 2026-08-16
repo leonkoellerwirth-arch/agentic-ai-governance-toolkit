@@ -8,6 +8,23 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Agent readiness rubric** (INV-7): `evaluator/src/agent_evaluator/readiness.yaml` and the new
+  `agent-eval readiness` command answer the half of the question the toolkit could not answer
+  before. `rubric.yaml` scores what an agent can do to you; `readiness.yaml` scores whether the
+  organization running it has the control that implies. Six dimensions (inventory, oversight,
+  traceability, containment, assurance, currency), each scored R0–R3 against falsifiable anchors and
+  each derived from a demand the toolkit already makes elsewhere. Rendered to
+  [`docs/06-readiness/agent-readiness-rubric.md`](docs/06-readiness/agent-readiness-rubric.md);
+  `evaluator/examples/org-readiness-demo.yaml` is a runnable fictional organization whose control
+  levels are computed by `agent-eval score`, not asserted, so the two rubrics cannot drift apart.
+
+  Readiness is measured **relative to the exposure actually in production**, never absolutely.
+  Aggregation is a deliberately non-compensatory minimum — the requirement is the highest any agent
+  triggers, the achieved level the lowest reached by an agent that triggers it — and **no 0–100
+  index is produced**, because a single number invites optimizing the number instead of the control.
+  Ten further entries in the policy-decision register cover every threshold the rubric introduces,
+  including why `assurance` deliberately stays at R1 for C2 and why `traceability` is the one place
+  readiness demands more than exposure does.
 - **Regulatory source lock** (INV-5): `evaluator/src/agent_evaluator/regulatory_sources.yaml` pins
   every article the checklists cite to an act, a CELEX id, an Official Journal citation, and the
   consolidated version it was last checked against — with the EUR-Lex URLs of that check. Each
