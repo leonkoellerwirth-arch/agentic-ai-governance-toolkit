@@ -24,7 +24,7 @@ that no longer exists fails it too.
 ## Coverage
 
 <!-- GENERATED:policy_coverage START — edit policy_decisions.yaml, then run `agent-eval render-docs` -->
-7 thresholds carry a judgement; 7 decisions are recorded.
+17 thresholds carry a judgement; 17 decisions are recorded.
 
 | Threshold | Decision |
 |---|---|
@@ -35,6 +35,16 @@ that no longer exists fails it too.
 | `rubric.yaml#aggregation.overrides.action_space` | PD-OVERRIDE-ACTION-SPACE |
 | `rubric.yaml#aggregation.overrides.reversibility` | PD-OVERRIDE-REVERSIBILITY |
 | `rubric.yaml#aggregation.overrides.data_sensitivity` | PD-OVERRIDE-DATA-SENSITIVITY |
+| `readiness.yaml#dimensions` | PD-R-DIMENSIONS-001 |
+| `readiness.yaml#scale` | PD-R-SCALE-001 |
+| `readiness.yaml#dimensions.inventory.required` | PD-R-REQ-INVENTORY |
+| `readiness.yaml#dimensions.oversight.required` | PD-R-REQ-OVERSIGHT |
+| `readiness.yaml#dimensions.traceability.required` | PD-R-REQ-TRACEABILITY |
+| `readiness.yaml#dimensions.containment.required` | PD-R-REQ-CONTAINMENT |
+| `readiness.yaml#dimensions.assurance.required` | PD-ASSURANCE-001 |
+| `readiness.yaml#dimensions.currency.required` | PD-R-REQ-CURRENCY |
+| `readiness.yaml#aggregation.per_dimension` | PD-R-AGG-001 |
+| `readiness.yaml#aggregation.exposure` | PD-R-EXPOSURE-001 |
 <!-- GENERATED:policy_coverage END -->
 
 ## The decisions
@@ -157,6 +167,179 @@ An irreversible action with wide reach reaches C4 only via the total or the acti
 **What it accepts as a cost**
 
 Overrides only ever raise the floor, never lower it. An agent touching one credential in a strictly bounded way gets C3 controls it may not need. That is the cheaper error of the two, and the exception path exists for the rest.
+
+### PD-R-DIMENSIONS-001 — Six readiness dimensions, each derived from a demand the toolkit already makes.
+
+**Applies to** `readiness.yaml#dimensions` · **status** `project_policy`
+
+**Why**
+
+- Every dimension points at an existing artefact — the C1–C4 control lists, the go-live gate, the logging requirements, the KPI catalog, decision rights, RACI. `derived_from` records which, so the claim "nothing here is invented" is checkable rather than asserted.
+- Each dimension names something a reviewer can ask for evidence about and be told no. The `probe` field is that question in its shortest form: a dimension that cannot be probed would be a maturity opinion, not a readiness measurement.
+- Six, and not more, because a dimension without a demand behind it would have to be invented. Identity and access management is the clearest candidate for a seventh and is recorded as a known simplification instead — see `simplifications.entitlements`.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+The dimensions inherit whatever the toolkit's own control lists get wrong. If a control is missing there, readiness cannot see it — the rubric measures conformance to this toolkit, not to the state of the art. Entitlements is the known instance: an agent can be confined to its documented action space and still hold credentials reaching systems that never appear in it, and this rubric will score that organization as ready.
+
+### PD-R-SCALE-001 — The readiness scale runs R0–R3, and R0 is honestly zero.
+
+**Applies to** `readiness.yaml#scale` · **status** `project_policy`
+
+**Why**
+
+- Exposure starts at 1 because every running agent has some autonomy. Readiness starts at 0 because "no decision trail at all" and "no defined stop at all" are real, common states, and a scale that cannot express them flatters every organization that is in one.
+- Four steps, not five: the anchors distinguish absent, described, demonstrated, and sustained. A fifth step would need a distinction the evidence behind it cannot carry.
+- The R2 anchors are deliberately written as demonstrations rather than as existence claims — "has been triggered at least once", "the refusal path is covered by a test". That is what makes R2 the meaningful threshold and R1 the honest resting place for paper controls.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+Four steps compress the distance between a mature organization and an exceptional one: R3 has to cover everything from "reconciliation happens" to "reconciliation finds discrepancies". An organization at a genuine R3 gets no room above it, so the rubric cannot show improvement past the point where it stops being interesting to a reviewer.
+
+### PD-R-REQ-INVENTORY — Inventory clarity required at R1/R2/R2/R3 for C1/C2/C3/C4.
+
+**Applies to** `readiness.yaml#dimensions.inventory.required` · **status** `project_policy`
+
+**Why**
+
+- Derived: the C1 control list demands only a recorded owner (R1). C2 adds documented intake and a risk assessment on file, which is the R2 anchor, and C3 adds nothing further to the registry itself — so C3 stays at R2 rather than inventing a demand.
+- C4 reaches R3 because the value-chain role and the provider and model dependencies are what the go-live gate and the provider-dependency doc require at that level; periodic reconciliation is the only way those stay true rather than being true once.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+C3 and C2 carry the same requirement, so the rubric cannot distinguish an organization that merely registered its C3 agents from one that governs them well. Inventory is the dimension where a self-assessment is cheapest to pass and where passing means least.
+
+### PD-R-REQ-OVERSIGHT — Action space and intervention required at R1/R2/R2/R3 for C1/C2/C3/C4.
+
+**Applies to** `readiness.yaml#dimensions.oversight.required` · **status** `project_policy`
+
+**Why**
+
+- Derived: technical enforcement of the action space plus a tested refusal path is the R2 anchor, and it is what the C2 control list already implies once an agent writes anywhere. The explicit human gate that C3 demands is inside the same anchor, so C3 stays at R2.
+- C4 reaches R3 because per-action pre-authorization is a C4 control verbatim, and because the blocked-action rate only means something if it is watched rather than merely written down.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+A C3 agent and a C2 agent are held to the same enforcement standard, which understates how much more a human-in-the-loop gate costs to run than a documented boundary. The rubric sees that the gate exists; it does not see whether the humans behind it have the time to use it, and a rubber-stamped approval scores exactly like a considered one.
+
+### PD-R-REQ-TRACEABILITY — Reconstructability required at R1/R2/R3/R3 for C1/C2/C3/C4 — the only dimension at R3 by C3.
+
+**Applies to** `readiness.yaml#dimensions.traceability.required` · **status** `project_policy`
+
+**Why**
+
+- Derived: the mandatory log fields are an R2 anchor and apply from C2. C3 reaches R3 because an audit trail an agent could rewrite is not an audit trail, and integrity protection is the difference between the R2 and R3 anchors.
+- This is the only dimension pulled to R3 one level early. The reason is asymmetry of repair: every other gap can be closed going forward, but a decision that was never traceable cannot be made traceable afterwards. The evidence is either there at the time or it is gone.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+C3 organizations are held to a standard the C3 control list does not literally spell out — the one place this rubric demands slightly more than the exposure rubric, justified by the irreversibility above and named here rather than hidden. The practical cost is real: retention rules, restricted read access, and append-only storage are the most expensive R3 in the set, and an organization can reasonably decide the trade is not worth it for its C3 agents.
+
+### PD-R-REQ-CONTAINMENT — Stop and roll back required at R0/R1/R2/R3 — the only dimension whose requirement starts at zero.
+
+**Applies to** `readiness.yaml#dimensions.containment.required` · **status** `project_policy`
+
+**Why**
+
+- Derived: the C1 control list demands no kill-switch, so demanding one would ask more than the exposure rubric does. A read-only assistant is stopped by turning it off, and pretending otherwise would make the whole scale unfalsifiable at the bottom.
+- R2 requires that the kill-switch has actually been triggered under realistic conditions with a measured time to effect. A documented but never-exercised stop path is R1 by construction — that distinction is the point of the dimension.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+A C1 agent with no stop path at all is scored ready on this dimension. That is defensible only as long as the control level is right; a mis-scored C1 agent that in fact writes somewhere inherits a blind spot here rather than a gap, and this rubric cannot detect the mis-scoring because it takes the control level as given.
+
+### PD-ASSURANCE-001 — Independent assurance required at R1/R1/R2/R3 — C2 stays at R1, deliberately.
+
+**Applies to** `readiness.yaml#dimensions.assurance.required` · **status** `project_policy`
+
+**Why**
+
+- Derived, and the derivation is the whole argument: the C2 control list demands a named, signing owner and nothing more. Independent 2nd-line review first appears as a C3 control. Requiring R2 at C2 would make the readiness rubric demand more than the exposure rubric, which is exactly the failure mode `derived_from` exists to prevent.
+- Keeping the two rubrics consistent is worth more than tightening one number. If C2 should demand independent review, the correction belongs in the C2 control list in `rubric.yaml`, where it would apply to everything downstream — not smuggled in here.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+Stated rather than hidden: a C2 agent writing into systems the business depends on may be signed off by the team that built it. That is a real exposure, and this rubric will not flag it. Anyone who finds the trade unacceptable should raise the C2 control list rather than this row, and should expect the readiness bar to follow automatically.
+
+### PD-R-REQ-CURRENCY — Currency required at R1/R2/R2/R3 for C1/C2/C3/C4.
+
+**Applies to** `readiness.yaml#dimensions.currency.required` · **status** `project_policy`
+
+**Why**
+
+- Derived: C1 re-assesses on material change (R1); C2 adds monitored operational KPIs and an annual re-assessment, which is the R2 anchor. C3 keeps R2 — the quarterly cadence it adds is a frequency, not a new capability.
+- C4 reaches R3 because R3 is the only anchor that asks whether the cadence is actually being met and whether a breached threshold has ever been escalated in practice.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+The rubric measures that re-assessment happens, never whether it finds anything. An organization that re-assesses quarterly and changes nothing scores identically to one whose re-assessments produce findings — the more valuable of the two is invisible here.
+
+### PD-R-AGG-001 — Non-compensatory minimum: required is the highest any agent triggers, achieved is the lowest reached by an agent that triggers it. No single index value is produced.
+
+**Applies to** `readiness.yaml#aggregation.per_dimension` · **status** `project_policy`
+
+**Why**
+
+- This is a chosen decision rule, not a proven correctness. It is stated that way on purpose: a weak critical control should not be compensated by strong values elsewhere, because the organization is reached through its weakest high-risk agent, not through its average one.
+- A mean would be flattered by harmless agents. An organization with nine C1 assistants and one C4 payments agent would average its way to a comfortable number while the only agent that can cause real damage sits unguarded.
+- No 0–100 index, because a single number invites optimizing the number instead of the control. "4 of 6 at exposure C3" cannot be quoted without its exposure, which is the property that makes it safe to share.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+A minimum is brittle and easy to argue with: one agent at R1 drags the dimension to R1 no matter how good the other twenty are, and the organization will experience that as unfair. The per-dimension detail ("1 of 3 C4 agents below target") is the mitigation, not a fix — it separates a single site from a systemic gap without changing the headline. Refusing a single score also costs real adoption: an index is what a management report asks for, and this rubric will lose to one that offers a number.
+
+### PD-R-EXPOSURE-001 — Organizational exposure is the highest control level in production, not a distribution.
+
+**Applies to** `readiness.yaml#aggregation.exposure` · **status** `project_policy`
+
+**Why**
+
+- Readiness has to be measured against something. The alternative — measuring against the typical agent — would let an organization running one C4 payments agent report itself against C2, which is the exact self-deception this rubric exists to prevent.
+- The choice is stated in the rubric as a `known_bias` rather than defended as neutral. A risk function reads it as correct; a delivery function reads it as unfair. Both readings are available to anyone who sees the result, because the result always carries its exposure.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+One agent sets the bar for the entire organization, so the readiness figure says nothing about how far the other agents are from it and can shift a whole control level when a single agent is retired. An organization can also lower its exposure by decommissioning one agent rather than by improving anything — the rubric would record that as progress, and in a narrow sense it is.
 <!-- GENERATED:policy_decisions END -->
 
 ## If you adopt this rubric
