@@ -13,9 +13,11 @@ nothing business-internal; all examples are fictional. See `dev/base/CONSTITUTIO
 _(The rules that must never quietly break. Enforced by `scripts/gate.sh` / the evaluator tests
 where possible.)_
 
-- **INV-1 — One rubric, one source.** The scoring rubric lives exactly once, in
-  `evaluator/src/agent_evaluator/rubric.yaml`. `risk_score.py` reads it; the doc table in
-  `docs/02-risk-assessment/scoring-rubric.md` is rendered from it; a test fails if they drift.
+- **INV-1 — One rubric, one source.** Each rubric lives exactly once. The exposure rubric is
+  `evaluator/src/agent_evaluator/rubric.yaml` (`risk_score.py` reads it; the doc table in
+  `docs/02-risk-assessment/scoring-rubric.md` is rendered from it); the readiness rubric is
+  `readiness.yaml` (`readiness.py` reads it; `docs/06-readiness/agent-readiness-rubric.md` is
+  rendered from it). A test fails if either drifts from its documentation.
 - **INV-2 — No customer internals.** No employer/customer names or recognizable architectures
   (checked in the gate). All example organizations are fictional (e.g. the "Nordbank").
 - **INV-3 — Regulatory care.** Article/paragraph references (EU AI Act, DORA, MaRisk) appear only
@@ -35,11 +37,35 @@ where possible.)_
   any, and **what it accepts as a cost**. Nothing may be neither. The thresholds needing cover are
   computed from the rubric files, so a new band or override cannot land without its decision, and a
   decision cannot outlive the threshold it justifies.
+- **INV-7 — Readiness is relative to exposure, never absolute.** The readiness rubric may never
+  demand more than the exposure rubric already demands; every dimension records the demand it is
+  derived from, and `required` never falls as the control level rises. The demo organization's
+  control levels are **computed** by `score_agent`, not asserted, so the two rubrics cannot disagree
+  in the one place a reader compares them. No single index value is produced — a required/achieved
+  pair per dimension cannot be quoted without its exposure, and a number invites optimizing the
+  number instead of the control. Enforced by `test_readiness_consistency.py` and
+  `test_readiness_score.py`.
 
 ## Decision register
 
 Newest first. Each: date · decision · why · (superseded by …).
 
+- **2026-08-16 — The readiness rubric enters the source tree (INV-7).** The toolkit could say how
+  much control an agent needs and could not say whether the organization has it — the half of the
+  question every real conversation is actually about. `readiness.yaml` closes that, with ten new
+  policy decisions, because the INV-6 check computed its thresholds the moment the file existed and
+  refused to pass without them. Three choices are worth naming: aggregation is a **non-compensatory
+  minimum**, recorded as a chosen decision rule and not as methodical correctness; **no 0–100 index**
+  is produced, which costs adoption on purpose; and `traceability` is the single place the readiness
+  rubric demands slightly more than the exposure rubric (R3 already at C3), justified by asymmetry of
+  repair — every other gap can be closed going forward, a decision that was never traceable cannot.
+  `PD-ASSURANCE-001` goes the other way and keeps `assurance` at R1 for C2 rather than tightening a
+  number the C2 control list does not carry: if C2 should demand independent review, the correction
+  belongs in `rubric.yaml`, where everything downstream would follow. Two things are said out loud
+  rather than left to be discovered: **the gaming path** — retiring the single riskiest agent lowers
+  every reported figure without a control improving, and the result names that agent when one sets
+  the exposure alone — and **"the evaluator proves provenance, not truth"**, which bounds what a
+  deterministic tool can demonstrate at all. A reproducible result is not a correct rubric.
 - **2026-08-14 — Thresholds get a decision register (INV-6).** The README already said the
   thresholds are "a starting point, not a calibrated standard" — honest, but useless to someone
   defending a control level in a review. The register is the long version: which numbers are

@@ -3,6 +3,56 @@
 Session handoffs, **newest entry first**. Written by `/session-stop` (via
 `scripts/session-snapshot.sh`). Read the top entry at `/session-start`.
 
+## 2026-08-16 — Session 5 (S·01: the readiness rubric enters the source tree)
+
+_HEAD main · gate PASS · INV-7 added · 113 tests_
+
+- **Done:** S·01 in full — the toolkit can now answer the half of the question it could not answer
+  before: not "how much control does this agent need" but "does the organization have it".
+  - **`readiness.yaml`** finished from `local/03-readiness-entwurf.yaml` and shipped as package
+    data, with `readiness.py` (loader, scoring, doc rendering) and `agent-eval readiness`. Six
+    dimensions, R0–R3, each `derived_from` a demand the toolkit already makes. Exits non-zero on any
+    gap, so it can gate.
+  - **Ten policy decisions** (`PD-R-*`, plus `PD-ASSURANCE-001` under the id the last session
+    reserved). The INV-6 check computed the required targets the moment the file existed and refused
+    to pass without them — the mechanism worked exactly as designed, unprompted.
+  - **`docs/06-readiness/agent-readiness-rubric.md`**, fully rendered from the YAML, and
+    `evaluator/examples/org-readiness-demo.yaml` — the fictional Nordbank running the same three
+    scored use cases. Result: 3 of 6 at exposure C4, one systemic gap (traceability, both
+    bar-setting agents) and two single-site gaps.
+  - **INV-7** in `BIBLE.md` + 21 tests. The strongest is
+    `test_the_demo_organization_uses_the_levels_the_exposure_rubric_produces`: the demo's control
+    levels are **computed** by `score_agent`, never asserted, so the two rubrics cannot disagree in
+    the one place a reader sees both.
+  - **Two items rescued from `local/` that the first pass missed** (found only by re-reading
+    `05-methodologie.md` §9 and §1.5 when asked whether the work was actually finished):
+    the **gaming path** — it was in `PD-R-EXPOSURE-001` but not in `known_bias`, so it never reached
+    the output; now its own block, rendered into the doc and emitted as a warning naming the agent
+    whenever one alone sets the exposure — and **"the evaluator proves provenance, not truth"**,
+    which was nowhere in the repo verbatim and now bounds the README's known limitations.
+- **Decided:** (register entry in `BIBLE.md`) Aggregation is a **non-compensatory minimum**, recorded
+  as a chosen decision rule, never as methodical correctness. **No 0–100 index** — it costs adoption
+  on purpose, and a test fails if anyone adds one back. `traceability` is the single place readiness
+  demands more than exposure (R3 already at C3), justified by asymmetry of repair: every other gap
+  closes going forward, a decision that was never traceable cannot. `PD-ASSURANCE-001` goes the other
+  way — `assurance` stays at R1 for C2, because tightening a number the C2 control list does not carry
+  would break the derivation; that correction belongs in `rubric.yaml`.
+- **Open:** Unchanged and both owner decisions, not method: where the **practitioner evidence layer**
+  lives, and **which channels and people** to approach. Still `verification.owner_verified: false` in
+  the source lock — a human must open the four EUR-Lex links.
+- **Next:** **S·02 — the talk, and the two or three targeted approaches in the existing network.**
+  This is the bottleneck and it has not moved since the concept was written. S·03 (console, second
+  axis) is deliberately **gated behind it**: the build order requires the dimensions to be calibrated
+  against a real room *before* the URL exists. Building the console now would break that order.
+- **Continuity warnings:**
+  - `local/` is **git-ignored**. `05-methodologie.md` remains the authority for the build order and
+    exists only on this machine. Two S·01 items lived only there and were nearly shipped incomplete —
+    re-read §9 and §1.5 before declaring any later step done.
+  - **What is not tested, and cannot be here:** whether the R0–R3 anchors actually discriminate when
+    a real case is worked through. The methodology says only S·05 can show that. The tests cover the
+    aggregation logic and the rubric's internal consistency, not the quality of the anchors.
+  - The repo is now more complete than it is read. More building does not fix that.
+
 ## 2026-08-14 — Session 4 (source lock, sector-independent gaps, decision register)
 
 _HEAD main · gate PASS · 21 files · INV-5 and INV-6 added_
