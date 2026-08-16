@@ -16,19 +16,23 @@ source .venv/bin/activate
 # 1. Score a use case → risk total, control level, required controls
 agent-eval score --input evaluator/examples/usecase-03-payments-operations-agent.yaml
 
-# 2. Check an agent against a machine-readable policy (exit 1 on any violation)
+# 2. Assess whether the organization can carry what it runs (exit 1 on any gap)
+agent-eval readiness --input evaluator/examples/org-readiness-demo.yaml
+
+# 3. Check an agent against a machine-readable policy (exit 1 on any violation)
 agent-eval policy-check \
   --input evaluator/examples/agent-for-policy-check.yaml \
   --policy evaluator/policies/example-policy.yaml
 
-# 3. Analyze an agent's audit trail against policy thresholds (exit 1 on any finding)
+# 4. Analyze an agent's audit trail against policy thresholds (exit 1 on any finding)
 agent-eval log-analyze \
   --input evaluator/examples/logs-sample.jsonl \
   --policy evaluator/policies/example-policy.yaml
 ```
 
-Add `--json` to `score`, `policy-check`, and `log-analyze` for machine-readable output.
-`agent-eval render-docs` regenerates the rubric tables in `docs/` from `rubric.yaml`.
+Add `--json` to `score`, `readiness`, `policy-check`, and `log-analyze` for machine-readable
+output. `agent-eval render-docs` regenerates the generated tables in `docs/` from `rubric.yaml`,
+`readiness.yaml`, `regulatory_sources.yaml`, and `policy_decisions.yaml`.
 
 The optional `judge` command (`agent-eval judge`) demonstrates the local LLM-as-judge pattern and
 requires the `llm` extra plus a running Ollama; it is a reference pattern, not a production system.
@@ -38,12 +42,15 @@ requires the `llm` extra plus a running Ollama; it is a reference pattern, not a
 ```
 src/agent_evaluator/
   risk_score.py     control-intensity scoring — reads the single-source rubric.yaml
+  readiness.py      organizational readiness — reads the single-source readiness.yaml
   policy_check.py   rule-based checks against a YAML policy
   log_analyzer.py   thresholds over a JSONL audit trail
   llm_judge.py      OPTIONAL: local LLM-as-judge pattern (Ollama), isolated behind an extra
   rubric.yaml       the ONE source of truth for the scoring rubric (docs + code read from it)
+  readiness.yaml    the ONE source of truth for the readiness rubric (docs + code read from it)
 policies/           example machine-readable policy
-examples/           example use-case inputs for `agent-eval score`
+examples/           use-case inputs for `agent-eval score`, plus a demo organization for
+                    `agent-eval readiness` (fictional; the two are consistency-tested)
 tests/              offline pytest suite; real-model tests are @slow
 ```
 

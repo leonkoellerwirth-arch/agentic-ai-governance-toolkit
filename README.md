@@ -74,13 +74,20 @@ agent-eval log-analyze  --input evaluator/examples/logs-sample.jsonl \
 | **Checklists** | EU AI Act ([EN](docs/03-checklists/eu-ai-act-agent-checklist.en.md) · [DE](docs/03-checklists/eu-ai-act-agent-checklist.de.md)) · DORA ([EN](docs/03-checklists/dora-ict-risk-checklist.en.md) · [DE](docs/03-checklists/dora-ict-risk-checklist.de.md)) · [go-live readiness](docs/03-checklists/go-live-readiness.md) · [regulatory sources](docs/03-checklists/regulatory-sources.md) |
 | **Operating model** | [Roles & RACI](docs/04-operating-model/roles-and-raci.md) · [decision rights](docs/04-operating-model/decision-rights.md) · [committee templates](docs/04-operating-model/committee-templates.md) · [provider dependency](docs/04-operating-model/provider-dependency.md) |
 | **Monitoring** | [KPI catalog](docs/05-monitoring/kpi-catalog.md) · [logging requirements](docs/05-monitoring/logging-requirements.md) · [incident response](docs/05-monitoring/incident-response.md) |
-| **Evaluator** | [Python tool](evaluator/README.md): risk scoring, policy checks, log analysis, optional LLM judge |
+| **Readiness** | [Agent readiness rubric](docs/06-readiness/agent-readiness-rubric.md) — whether the organization can carry the exposure it runs |
+| **Evaluator** | [Python tool](evaluator/README.md): risk scoring, readiness assessment, policy checks, log analysis, optional LLM judge |
 | **Templates** | [Use-case intake](templates/use-case-intake.md) · [agent registry entry](templates/agent-registry-entry.md) · [decommissioning protocol](templates/decommissioning-protocol.md) |
 
 **One rubric, one source of truth.** The scoring rubric lives once, in
 [`rubric.yaml`](evaluator/src/agent_evaluator/rubric.yaml). The evaluator scores against it, the
 [documentation tables](docs/02-risk-assessment/scoring-rubric.md) are rendered from it, and a test
-fails if the two ever drift.
+fails if the two ever drift. The same holds for
+[`readiness.yaml`](evaluator/src/agent_evaluator/readiness.yaml), the second rubric.
+
+**Two questions, two rubrics.** `rubric.yaml` asks how much control *an agent* needs — its exposure.
+`readiness.yaml` asks whether the *organization* running it has that control. Readiness is never
+absolute: it is measured against the control level actually in production, so an organization running
+only C1 agents can be ready while one running C4 agents with C2 controls is not.
 
 ## Known limitations
 
@@ -90,7 +97,18 @@ This is the first public release (v0.1.0). What it deliberately does **not** do:
   DORA) are indicative pointers marked "verify"; whether and how an obligation applies depends on
   your classification, role, and jurisdiction. See [`DISCLAIMER.md`](DISCLAIMER.md).
 - **The rubric is a starting point, not a calibrated standard.** Dimensions are equally weighted and
-  the thresholds are illustrative — adapt them to your own risk appetite.
+  the thresholds are illustrative — adapt them to your own risk appetite. Which numbers are
+  judgement, and what each one gets wrong on purpose, is recorded in
+  [policy decisions](docs/02-risk-assessment/policy-decisions.md).
+- **The evaluator proves provenance, not truth.** A deterministic evaluator shows that a result
+  followed reproducibly from the rules. It does not show that the rules are right — that C1–C4 are
+  calibrated, that R2 is the correct minimum, that the dimensions are complete, or that the
+  aggregation is valid. Those are arguments, and they are written down to be argued with.
+- **Readiness is self-assessed, and self-assessment overstates.** The readiness rubric asks for
+  evidence a reviewer could demand and be refused; nothing checks that the evidence exists.
+  `traceability` is the dimension it most reliably overstates, and the result says so when the claim
+  is high. Exposure follows the single riskiest agent, so retiring that one agent lowers the reported
+  figure without any control improving — the result names that path too.
 - **The evaluator is a reference pattern, not a product.** No persistence, no API, no auth, no UI —
   it is a readable CLI and library meant to be understood and adapted, not deployed as-is.
 - **The `llm_judge` is a demonstration.** It shows the LLM-as-judge control; it is not evaluated,
