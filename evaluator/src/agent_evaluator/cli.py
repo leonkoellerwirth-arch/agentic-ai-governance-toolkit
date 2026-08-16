@@ -24,6 +24,8 @@ from .log_analyzer import analyze_log_file
 from .policy import check_coverage
 from .policy import update_docs as update_policy_docs
 from .policy_check import PolicyCheckInput, check_policy, load_policy
+from .readiness import OrganizationReadiness, ReadinessResult, assess_readiness
+from .readiness import update_docs as update_readiness_docs
 from .regulatory import check_references
 from .regulatory import update_docs as update_regulatory_docs
 from .risk_score import AgentAssessment, RiskResult, score_agent
@@ -73,6 +75,31 @@ def score(input_path: Path, as_json: bool) -> None:
     _print_result(result)
 
 
+@main.command()
+@click.option(
+    "--input",
+    "input_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="YAML listing every agent in production with its control level and R0–R3 scores.",
+)
+@click.option("--json", "as_json", is_flag=True, help="Emit the assessment as JSON.")
+def readiness(input_path: Path, as_json: bool) -> None:
+    """Assess whether the organization can carry the exposure it runs; exit non-zero on any gap."""
+    data = yaml.safe_load(input_path.read_text(encoding="utf-8")) or {}
+    try:
+        result = assess_readiness(OrganizationReadiness(**data))
+    except (ValidationError, ValueError) as exc:
+        raise click.ClickException(f"invalid readiness input in {input_path}: {exc}") from exc
+
+    if as_json:
+        click.echo(json.dumps(result.model_dump(), indent=2, ensure_ascii=False))
+    else:
+        _print_readiness(result)
+    if result.gaps:
+        raise SystemExit(1)
+
+
 @main.command("render-docs")
 @click.option("--check", is_flag=True, help="Exit non-zero if docs are stale; write nothing.")
 def render_docs(check: bool) -> None:
@@ -81,6 +108,7 @@ def render_docs(check: bool) -> None:
         update_docs(write=not check)
         + update_regulatory_docs(write=not check)
         + update_policy_docs(write=not check)
+        + update_readiness_docs(write=not check)
     )
     unpinned = check_references()
     if unpinned:
@@ -99,7 +127,7 @@ def render_docs(check: bool) -> None:
                 f"stale docs: {', '.join(changed)} — run `agent-eval render-docs`"
             )
         console.print(
-            "docs are consistent with rubric.yaml, regulatory_sources.yaml, "
+            "docs are consistent with rubric.yaml, readiness.yaml, regulatory_sources.yaml, "
             "and policy_decisions.yaml"
         )
     else:
@@ -213,6 +241,46 @@ def judge(output_path: Path, policy_path: Path) -> None:
     console.print(f"[bold]{verdict.decision.upper()}[/bold] — {verdict.reason}")
     if verdict.decision != "pass":
         raise SystemExit(1)
+
+
+def _print_readiness(result: ReadinessResult) -> None:
+    console.print(f"\n[bold]{result.organization}[/bold]")
+    if not result.applicable:
+        console.print(f"[yellow]{result.coverage_statement}[/yellow]")
+        for warning in result.warnings:
+            console.print(f"  [yellow]![/yellow] {warning}")
+        console.print()
+        return
+
+    style = _LEVEL_STYLE.get(result.exposure or "", "bold")
+    console.print(
+        f"Exposure [{style}]{result.exposure}[/{style}] — the highest control level among "
+        f"{result.agent_count} agents in production"
+    )
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Dimension")
+    table.add_column("Required", justify="center")
+    table.add_column("Achieved", justify="center")
+    table.add_column("", justify="center")
+    table.add_column("Agents setting the bar")
+    for d in result.dimensions:
+        mark = "[green]✓[/green]" if d.met else "[red]✗[/red]"
+        achieved = f"R{d.achieved}" if d.met else f"[red]R{d.achieved}[/red]"
+        table.add_row(d.label, f"R{d.required}", achieved, mark, d.detail)
+    console.print(table)
+
+    # Deliberately not a single index value: the pair per dimension cannot be quoted without its
+    # exposure, and a number invites optimizing the number instead of the control.
+    console.print(f"Coverage [bold]{result.coverage_statement}[/bold]")
+
+    if result.gaps:
+        console.print("\n[bold]Gaps[/bold]")
+        for gap in result.gaps:
+            console.print(f"  [red]✗[/red] {gap}")
+    for warning in result.warnings:
+        console.print(f"\n[yellow]![/yellow] {warning}")
+    console.print()
 
 
 def _print_result(result: RiskResult) -> None:

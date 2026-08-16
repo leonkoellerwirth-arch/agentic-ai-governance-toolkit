@@ -1,0 +1,50 @@
+# Fictional organization — Nordbank (a fictional regional bank).
+#
+# The three agents are exactly the three scored use cases in this directory; the control level of
+# each is the output of `agent-eval score` on that file:
+#
+#   usecase-01-internal-knowledge-assistant.yaml  → total 10 → C1
+#   usecase-02-customer-servicing-agent.yaml      → total 18 → C3
+#   usecase-03-payments-operations-agent.yaml     → total 21 → C3, raised to C4 by the
+#                                                   action-space override (it can move money)
+#
+# The readiness scores below are the organization's own R0–R3 assessment per agent. They are what a
+# self-assessment plausibly looks like after a serious first year: the registry and the action-space
+# controls are genuinely in place, and the three things that are hardest to finish are not.
+organization: Nordbank (fictional)
+
+# Deliberately false in this demo, so the precondition is visible rather than assumed. Until the
+# value-chain role (provider / deployer) and the risk category are determined per agent, the
+# exposure figure is regulatorily incomplete and the result says so.
+regulatory_classification_determined: false
+
+agents:
+  - name: Internal knowledge assistant
+    control_level: C1
+    scores:
+      inventory: 2      # in the registry with owner, intake, and an assigned control level
+      oversight: 2      # read-only scope is technically enforced and tested
+      traceability: 1   # answers and sources are logged; the mandatory fields are incomplete
+      containment: 0    # no defined stop — at C1 the rubric does not ask for one
+      assurance: 1      # signed off by a named owner, not separated from delivery
+      currency: 1       # KPIs exist without thresholds; re-assessment is ad hoc
+
+  - name: Customer-servicing agent
+    control_level: C3
+    scores:
+      inventory: 3      # role, model, and provider dependencies inventoried and reconciled
+      oversight: 3      # enforced scope, explicit human gate, blocked-action rate watched
+      traceability: 2   # every mandatory field present — but the trail is not tamper-evident
+      containment: 2    # kill-switch and rollback triggered once, with a measured time to effect
+      assurance: 2      # 2nd line owns the risk assessment; its sign-off gates go-live
+      currency: 2       # KPIs wired with thresholds and alerting; material change triggers review
+
+  - name: Payments operations agent
+    control_level: C4
+    scores:
+      inventory: 3      # reconciliation runs periodically and finds discrepancies
+      oversight: 3      # per-action pre-authorization; blocked-action rate is a watched KPI
+      traceability: 2   # not append-only, retention not set per data category — the C4 gap
+      containment: 2    # kill-switch exercised, but the incident runbook is not rehearsed
+      assurance: 3      # governance board for C4 and for every exception; 3rd-line assurance
+      currency: 2       # wired and monitored, but this agent is past its quarterly cadence
