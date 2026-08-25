@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Verification log** ([`VERIFICATION.md`](VERIFICATION.md)): what has been checked in
+  `regulatory_sources.yaml`, by what means, and what a person still has to do before
+  `owner_verified` can move. The gap between "recorded and pinned" and "read back against the
+  primary text" is now a list with a length rather than a feeling.
+
+  The 2026-08-25 pass confirms the provenance — CELEX identifiers, OJ citations, the consolidated
+  version `02024R1689-20260727` and the amending act — and finds the gap to be entirely in the
+  topic labels. One is wrong rather than imprecise: the AI Act's Article 13 is recorded as
+  "instructions for use", which is one obligation inside an article about transparency and
+  information to deployers. Five further labels omit half a heading or describe the section rather
+  than the article. Each is listed with its proposed replacement.
+
+  **The flag stays `false`.** EUR-Lex answers automated requests with an empty body, so the pass
+  fell back in part on secondary renderings of the official text — a cross-check, not
+  verification. Recording that limit is the point: a register whose value is citability cannot
+  claim a confirmation it did not obtain. The remaining work is an hour with a browser, and the
+  file says exactly which hour.
+
+  The log sits at the repository root rather than under `docs/`, because the reference checker
+  requires a citing document to be bound to one framework and a correction list spanning two acts
+  cannot be. It names the act beside every article instead, which is the guarantee that rule
+  exists to provide.
+
 ## [0.3.0] — 2026-08-25
 
 ### Changed

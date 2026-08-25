@@ -84,6 +84,11 @@ response payload, where someone acting on it will see it, not in a document they
 `regulatory_sources.yaml` carries an `owner_verified` flag. While it is `false`, the article
 references have been recorded and pinned but not read back against the original text by a person.
 
+What has been checked, by what means, and what is left is recorded in the
+[verification log](../../VERIFICATION.md). As of 2026-08-25 the provenance — identifiers,
+citations, consolidated version — is confirmed; six topic labels are not, and one of them is
+wrong rather than merely imprecise.
+
 That is a legitimate interim state and an illegitimate resting state. Anything built on the register
 inherits its verification status, and a tool that circulates an unverified reference circulates it
 faster than it can be corrected.
