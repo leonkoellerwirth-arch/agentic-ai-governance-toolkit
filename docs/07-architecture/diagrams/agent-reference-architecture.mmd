@@ -2,6 +2,9 @@
 %% comes from. Authority markers match docs/03-checklists/action-authority-matrix.md:
 %%   [A] automatic   [A*] automatic while its preconditions hold   [H] human approval
 %%   [X] refused by design
+%%
+%% Every data and tool access goes through one enforcement point. An earlier version labelled the
+%% brokers with guarantees and drew paths around them, which claimed enforcement it did not show.
 flowchart LR
     subgraph people["People"]
         REQ["Requester"]
@@ -15,7 +18,7 @@ flowchart LR
 
         subgraph control["Control plane — deterministic, no model in the path"]
             POL["Action policy<br/>(authority matrix)"]
-            CHK["Pre-action check<br/>intersect requested action<br/>with the action space"]
+            PEP["Enforcement point<br/>verifies the token, the action<br/>and its parameters — before the effect"]
             GATE["Human gate<br/>fail-safe: reject"]
             TRAIL[("Audit trail<br/>append-only, hash-chained")]
         end
@@ -26,8 +29,8 @@ flowchart LR
             REV["Reviewer"]
         end
 
-        subgraph brokers["Brokers — fixed schemas, no model output admitted"]
-            TOOL["Tool and secret broker<br/>capability-bound, sink-side checks"]
+        subgraph brokers["Broker — holds the credentials, takes no instruction from the runtime"]
+            TOOL["Tool and secret broker<br/>executes a capability the control<br/>plane bound; checks at the sink"]
         end
 
         subgraph data["Data plane"]
@@ -45,30 +48,34 @@ flowchart LR
 
     REQ --> IDB
     IDB -->|"scoped token"| PLAN
-    PLAN -->|"every step"| CHK
-    POL --> CHK
-    CHK -->|"[A] within the action space"| WORK
-    CHK -->|"[X] outside it — step discarded"| TRAIL
-    WORK -->|"[A*] authorisation before retrieval;<br/>[H] special category, bulk, exception"| IDX
-    IDX --> WORK
-    SOR --> WORK
-    WORK -->|"prompt and output hashes,<br/>provider and region"| TRAIL
+    IDB -.->|"token verified per step"| PEP
+    POL --> PEP
+    PLAN -->|"every step"| PEP
+    WORK -->|"every request"| PEP
+    PEP -->|"[X] outside the action space — discarded"| TRAIL
+    PEP -->|"[A*] purpose bound, least privilege,<br/>authorisation before retrieval"| IDX
+    PEP -->|"[A*] same, for records"| SOR
+    PEP -->|"[H] special category · bulk · exception ·<br/>record change · composed message · payment"| GATE
+    PEP -->|"[A] within the action space"| WORK
+    PEP -->|"capability bound here, not by the runtime"| TOOL
+    IDX -->|"result"| WORK
+    SOR -->|"result"| WORK
     WORK <-->|"inference"| LLM
-    WORK -->|"tool request — never a secret"| TOOL
-    TOOL --> SEC
-    TOOL -->|"[A*] approved flow, provider, region"| API
-    TOOL -->|"[A*] approved deletion rule;<br/>[A*] revocation on a source event"| SOR
-    TOOL -->|"[A*] pre-approved template, recipient from the record"| RCP
+    WORK -->|"prompt and output hashes,<br/>provider and region"| TRAIL
     WORK -.->|"[X] never reaches the model context"| SEC
+    TOOL --> SEC
+    TOOL -->|"[A*] approved provider, region, purpose"| API
+    TOOL -->|"[A*] approved rule, legal-hold checked,<br/>scope not widened by the agent"| SOR
+    TOOL -->|"[A*] approved template, recipient from<br/>the record, no generated free text"| RCP
     WORK --> REV
     REV -->|"escalate"| GATE
-    WORK -->|"[H] record change, composed message, payment"| GATE
     GATE --> APP
     APP -->|"approve · reject · edit"| GATE
-    GATE -->|"[H] approved"| TOOL
+    GATE -->|"[H] approved capability"| TOOL
     PLAN --> TRAIL
     REV --> TRAIL
     GATE --> TRAIL
+    PEP --> TRAIL
     TOOL --> TRAIL
 
     classDef refused stroke-dasharray: 4 3

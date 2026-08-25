@@ -6,6 +6,26 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **The reference architecture now draws its enforcement instead of labelling it.** A second review
+  pass found the redraw still claiming guarantees the picture did not show: the delegation broker
+  issued a token nobody verified, `SOR → WORK` bypassed any pre-authorisation entirely, the
+  escalating retrieval path ran straight to the index rather than through the gate, and "no model
+  output admitted" was written on a broker whose request the worker — which sees model output —
+  composed.
+
+  Every data and tool access now crosses one **enforcement point** that verifies the token, the
+  action and its parameters before the effect. The capability the broker executes is bound there
+  rather than composed by the runtime, and the broker checks again at the sink. The automatic
+  deletion and notification paths carry their preconditions on the arrow — legal-hold checked,
+  scope not widened by the agent, recipient from the record, no generated free text — instead of
+  leaving them to the matrix.
+
+  Two answers in the questions table were corrected rather than softened: the human-approval list
+  was incomplete against the matrix, and the refusal on secrets had been narrowed to "into the
+  model context" while the matrix refuses the read outright.
+
 ### Added
 
 - **Evidence manifest** ([`evidence.py`](evaluator/src/agent_evaluator/evidence.py), written by

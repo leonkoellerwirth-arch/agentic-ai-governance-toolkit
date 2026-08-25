@@ -25,7 +25,7 @@ flowchart LR
 
         subgraph control["Control plane — deterministic, no model in the path"]
             POL["Action policy<br/>(authority matrix)"]
-            CHK["Pre-action check<br/>intersect requested action<br/>with the action space"]
+            PEP["Enforcement point<br/>verifies the token, the action<br/>and its parameters — before the effect"]
             GATE["Human gate<br/>fail-safe: reject"]
             TRAIL[("Audit trail<br/>append-only, hash-chained")]
         end
@@ -36,8 +36,8 @@ flowchart LR
             REV["Reviewer"]
         end
 
-        subgraph brokers["Brokers — fixed schemas, no model output admitted"]
-            TOOL["Tool and secret broker<br/>capability-bound, sink-side checks"]
+        subgraph brokers["Broker — holds the credentials, takes no instruction from the runtime"]
+            TOOL["Tool and secret broker<br/>executes a capability the control<br/>plane bound; checks at the sink"]
         end
 
         subgraph data["Data plane"]
@@ -55,30 +55,34 @@ flowchart LR
 
     REQ --> IDB
     IDB -->|"scoped token"| PLAN
-    PLAN -->|"every step"| CHK
-    POL --> CHK
-    CHK -->|"[A] within the action space"| WORK
-    CHK -->|"[X] outside it — step discarded"| TRAIL
-    WORK -->|"[A*] authorisation before retrieval;<br/>[H] special category, bulk, exception"| IDX
-    IDX --> WORK
-    SOR --> WORK
-    WORK -->|"prompt and output hashes,<br/>provider and region"| TRAIL
+    IDB -.->|"token verified per step"| PEP
+    POL --> PEP
+    PLAN -->|"every step"| PEP
+    WORK -->|"every request"| PEP
+    PEP -->|"[X] outside the action space — discarded"| TRAIL
+    PEP -->|"[A*] purpose bound, least privilege,<br/>authorisation before retrieval"| IDX
+    PEP -->|"[A*] same, for records"| SOR
+    PEP -->|"[H] special category · bulk · exception ·<br/>record change · composed message · payment"| GATE
+    PEP -->|"[A] within the action space"| WORK
+    PEP -->|"capability bound here, not by the runtime"| TOOL
+    IDX -->|"result"| WORK
+    SOR -->|"result"| WORK
     WORK <-->|"inference"| LLM
-    WORK -->|"tool request — never a secret"| TOOL
-    TOOL --> SEC
-    TOOL -->|"[A*] approved flow, provider, region"| API
-    TOOL -->|"[A*] approved deletion rule;<br/>[A*] revocation on a source event"| SOR
-    TOOL -->|"[A*] pre-approved template, recipient from the record"| RCP
+    WORK -->|"prompt and output hashes,<br/>provider and region"| TRAIL
     WORK -.->|"[X] never reaches the model context"| SEC
+    TOOL --> SEC
+    TOOL -->|"[A*] approved provider, region, purpose"| API
+    TOOL -->|"[A*] approved rule, legal-hold checked,<br/>scope not widened by the agent"| SOR
+    TOOL -->|"[A*] approved template, recipient from<br/>the record, no generated free text"| RCP
     WORK --> REV
     REV -->|"escalate"| GATE
-    WORK -->|"[H] record change, composed message, payment"| GATE
     GATE --> APP
     APP -->|"approve · reject · edit"| GATE
-    GATE -->|"[H] approved"| TOOL
+    GATE -->|"[H] approved capability"| TOOL
     PLAN --> TRAIL
     REV --> TRAIL
     GATE --> TRAIL
+    PEP --> TRAIL
     TOOL --> TRAIL
 
     classDef refused stroke-dasharray: 4 3
@@ -91,17 +95,17 @@ flowchart LR
 
 | Question | Answer in this architecture |
 |---|---|
-| Where does the model sit? | Outside the boundary, at an inference provider whose region is recorded per call. Nothing here assumes it is trustworthy, and the provider writes to its own logs, not to this trail. |
+| Where does the model sit? | Outside the boundary, at a provider whose region is recorded per call. Nothing here assumes it is trustworthy, and the provider writes to its own logs, not to this trail. |
 | Where does retrieval sit? | Inside. Index and embeddings are self-operated, which is what makes a deletion proof possible at all. |
-| Where do tools sit? | Behind a broker with fixed schemas that admits no model output as an instruction. The worker asks the broker for an effect; it never holds the credential. |
-| Which identity is used? | A scoped, time-bound, audience-bound delegation token issued by the broker before any step runs. Retrieval *verifies* that token — it does not establish identity, and drawing it as if it did was the first version's mistake. |
-| Which systems may be read? | The index and systems of record, with authorisation evaluated **before** retrieval. Special-category data, bulk access and exceptional purposes escalate — retrieval is `[A*]`, not `[A]`. |
-| Which systems may be written? | Systems of record. Two paths are automatic under preconditions: executing an approved deletion rule, and revoking access on a source event. Everything else goes through the gate. |
-| What needs human approval? | Composed messages leaving the organisation, ad-hoc record changes, payments, and anything the reviewer escalates. |
-| What is refused outright? | Reading secrets into the model context, changing the agent's own scope, disabling oversight — each under a named limb of the refusal criterion. |
-| What may happen automatically? | Retrieval inside the action space, drafting, calls inside an already-approved flow, and pre-approved templated notifications where the recipient comes from the record. |
+| Where do tools sit? | Behind a broker that holds the credentials and takes no instruction from the runtime. The capability it executes is bound by the control plane, not composed by the worker; the broker checks again at the sink. |
+| Which identity is used? | A scoped, time-bound, audience-bound delegation token, issued before any step runs and **verified at the enforcement point on every request**. Retrieval does not establish identity, and an earlier version that implied it did was wrong. |
+| Which systems may be read? | The index and systems of record — and only through the enforcement point, which is what "authorisation before retrieval" means here. Special-category data, bulk access and exceptional purposes go to the gate instead. |
+| Which systems may be written? | Systems of record, through the broker. Two paths run unattended under preconditions the diagram names: an approved deletion rule with its legal-hold check and no agent-widened scope, and revocation on a source event. |
+| What needs human approval? | Ad-hoc record changes, composed external messages, payments, publication, granting access, bulk export, changes to production logic, and decisions on an individual case — plus anything the reviewer escalates. |
+| What is refused outright? | Reading credentials, keys or secrets; changing the agent's own scope; disabling oversight. The broker reaches the secret store; the runtime never does. |
+| What may happen automatically? | Retrieval inside the action space, drafting, calls inside an already-approved flow, and pre-approved templated notifications where the recipient comes from the record and no free text is generated. |
 | Which data is processed outside? | Whatever the prompt carries to the provider, plus whatever an approved third-party call transmits — both logged with data categories and region. |
-| Where do logs arise? | Planner, worker, reviewer, gate and broker each write to one append-only, hash-chained trail. Hashes bind content that is already known; they do not prove the access was authorised or that no event was omitted. |
+| Where do logs arise? | Planner, worker, reviewer, gate, enforcement point and broker each write to one append-only, hash-chained trail. Hashes bind content already known; they do not prove the access was authorised or that no event was omitted. |
 
 ## The two boundaries that matter
 
@@ -110,8 +114,10 @@ architecture is arranged so that crossings are few, named and logged with their 
 is on the far side of it, which is the single most consequential fact in the picture.
 
 **The control-plane boundary** is the inner one, and it is the less obvious of the two. Policy,
-the pre-action check, the gate and the trail sit outside the agent's reach — no model in the path,
-nothing the agent can widen from inside. This is why refusing to *disable oversight* is a
+the enforcement point, the gate and the trail sit outside the agent's reach — no model in the
+path, nothing the agent can widen from inside. Every data and tool access crosses it, which is the
+only reason the labels on those arrows mean anything: an earlier version wrote guarantees onto the
+brokers and then drew paths around them, which claimed enforcement it did not show. This is why refusing to *disable oversight* is a
 meaningful row rather than a wish: if the control plane were inside the runtime, an agent that
 could stop logging could also suppress the record of having stopped it.
 
