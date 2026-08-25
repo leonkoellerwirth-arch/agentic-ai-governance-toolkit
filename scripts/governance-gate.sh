@@ -9,6 +9,10 @@
 # directory and a readable block to the summary file, both stamped with the evaluator version and
 # the commit under test.
 #
+# Every run also writes manifest.json: which tool, which rulesets (by digest), which commit, when,
+# and a SHA-256 per evidence file. That is what a reader needs a year later, and it is deliberately
+# beside the results rather than inside them, so nothing consuming the per-check JSON breaks.
+#
 # Exit: 0 clean · 1 findings · 2 misconfiguration or unusable input.
 # Not legal advice — see DISCLAIMER.md.
 #
@@ -106,6 +110,15 @@ check() {
   policy-check --input "$assessment" --policy "$policy"
 [ -z "$logs" ]       || check "Audit-log thresholds" log-analyze \
   log-analyze --input "$logs" --policy "$policy"
+
+# The manifest is what makes the directory archivable: tool, ruleset fingerprint, commit, and a
+# digest per file. Written last, so it covers everything the run produced.
+if agent-eval manifest --evidence "$evidence" --commit "$commit" >/dev/null 2>&1; then
+  echo "manifest: $evidence/manifest.json"
+else
+  echo "governance-gate: could not write the evidence manifest" >&2
+  failed=1
+fi
 
 echo "evidence: $evidence  ·  summary: $summary"
 

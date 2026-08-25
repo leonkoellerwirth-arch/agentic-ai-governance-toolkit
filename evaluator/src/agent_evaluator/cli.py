@@ -21,6 +21,7 @@ from rich.table import Table
 from . import __version__
 from .action_authority import check_matrix
 from .action_authority import update_docs as update_authority_docs
+from .evidence import write_manifest
 from .llm_judge import JudgeUnavailable, judge_output
 from .log_analyzer import analyze_log_file
 from .policy import check_coverage
@@ -42,6 +43,21 @@ _LEVEL_STYLE = {"C1": "green", "C2": "yellow", "C3": "dark_orange", "C4": "bold 
 @click.version_option(__version__, prog_name="agent-eval")
 def main() -> None:
     """Governance evaluator for AI agents — risk scoring, policy checks, log analysis."""
+
+
+@main.command()
+@click.option(
+    "--evidence",
+    "evidence_dir",
+    required=True,
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    help="Directory of evidence files written by a gate run.",
+)
+@click.option("--commit", default="", help="Commit the run was made against, if known.")
+def manifest(evidence_dir: Path, commit: str) -> None:
+    """Describe a directory of evidence: tool, rulesets, commit, and a digest per file."""
+    target = write_manifest(evidence_dir, commit=commit)
+    console.print(f"wrote {target}")
 
 
 @main.command()

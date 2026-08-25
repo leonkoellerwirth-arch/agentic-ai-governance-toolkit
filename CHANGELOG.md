@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **Evidence manifest** ([`evidence.py`](evaluator/src/agent_evaluator/evidence.py), written by
+  every gate run, also available as `agent-eval manifest --evidence <dir>`). The per-check JSON
+  said what was found and nothing about where it came from — not which tool, not which rulesets,
+  not when, not against which commit. An auditor opening that file a year later could not answer
+  the first question they would be asked.
+
+  The manifest answers it *beside* the results rather than inside them, so nothing consuming
+  `agent-eval <command> --json` breaks: tool and version, a SHA-256 per ruleset file plus one over
+  all of them, the commit under test, the timestamp, and a digest of every artifact the run wrote.
+
+  **The rulesets are fingerprinted by content, not by version number.** A version number records
+  what someone claimed; a digest records the rules that were actually in force. And the format
+  carries its own `schema_version`, moved independently of the tool, because a consumer targets the
+  format while the tool moves underneath it.
+
+  The manifest states what it does not prove, in the file: digests show the set has not been edited
+  since it was written. They show nothing about whether a check was authorised, complete or
+  correct.
+
 ### Fixed
 
 - **The checklists read as if deferred obligations were already in force.** Regulation (EU)
