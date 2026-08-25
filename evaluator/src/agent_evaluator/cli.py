@@ -22,6 +22,7 @@ from . import __version__
 from .action_authority import check_matrix
 from .action_authority import update_docs as update_authority_docs
 from .evidence import write_manifest
+from .legal_status import build_record, render_markdown
 from .llm_judge import JudgeUnavailable, judge_output
 from .log_analyzer import analyze_log_file
 from .policy import check_coverage
@@ -58,6 +59,20 @@ def manifest(evidence_dir: Path, commit: str) -> None:
     """Describe a directory of evidence: tool, rulesets, commit, and a digest per file."""
     target = write_manifest(evidence_dir, commit=commit)
     console.print(f"wrote {target}")
+
+
+@main.command("legal-status")
+@click.option("--for", "prepared_for", default="", help="Who the record is prepared for.")
+@click.option("--json", "as_json", is_flag=True, help="Emit the record as JSON.")
+def legal_status(prepared_for: str, as_json: bool) -> None:
+    """State, for every pinned act, whether the cited version is still the newest known."""
+    record = build_record(prepared_for)
+    if as_json:
+        click.echo(json.dumps(record, indent=2, ensure_ascii=False))
+    else:
+        click.echo(render_markdown(record))
+    if any(a["status"] == "superseded" for a in record["acts"]):
+        raise SystemExit(1)
 
 
 @main.command()

@@ -76,6 +76,20 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Legal-status record** (`agent-eval legal-status`, `--json` for the machine-readable form): for
+  every pinned act, the version cited, the newest the Publications Office reports, when that was
+  checked, and against which source. Exits non-zero when a pin has been superseded.
+
+  **The scope statement is part of the record, not a footnote.** A report that says nothing is read
+  as "nothing changed", and that reading is only defensible if the record states what was watched
+  and what was not — new acts, national law, case law, supervisory guidance, standards, delegated
+  and implementing acts are all named as outside it. A record that cannot say what it did not look
+  at is a promise of completeness nobody can keep.
+
+  A check that could not reach the source is recorded as **unchecked, never as current**. That is
+  the single failure mode which turns this kind of record from evidence into false comfort, and a
+  test asserts the record says so in its own words.
+
 - **Consolidation check** ([`scripts/check-consolidations.sh`](scripts/check-consolidations.sh)):
   asks the Publications Office SPARQL endpoint which consolidated versions of a pinned act exist,
   and reports one newer than the pin as a finding. A pin is what makes a citation checkable and
