@@ -11,6 +11,7 @@ from typing import Any
 
 import pytest
 
+from agent_evaluator import celex
 from agent_evaluator import legal_status as ls
 
 
@@ -420,3 +421,25 @@ def test_the_relation_route_asks_about_the_act_not_the_consolidated_base():
     relation = next(q for q in seen if "act_consolidated_based_on" in q)
     assert '"32023R1230"' in relation
     assert "02023R1230" not in relation
+
+
+# --- Identifier rules, stated once --------------------------------------------------------------
+
+
+def test_the_two_directions_are_inverses():
+    """They were written out separately and could have disagreed without anything noticing."""
+    for act in ("32023R1230", "32024R1689", "32014L0053", "32022R2554"):
+        assert celex.act_of(celex.consolidated_base(act)) == act
+
+
+def test_an_identifier_that_is_not_an_act_is_refused():
+    for bad in ("62023CJ0123", "12016E/TXT", "32023R123", "02023R1230-20260727", ""):
+        with pytest.raises(celex.CelexError):
+            celex.consolidated_base(bad)
+
+
+def test_a_pin_must_be_a_consolidation_of_its_own_act():
+    celex.check_pin("02023R1230-20260727", "32023R1230", "x")
+    for bad in ("02024R1689-20260727", "02023R1230", "2023R1230-20260727"):
+        with pytest.raises(celex.CelexError):
+            celex.check_pin(bad, "32023R1230", "x")

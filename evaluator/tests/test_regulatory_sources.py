@@ -7,7 +7,12 @@ these tests fail if a document and the source lock stop agreeing.
 
 from __future__ import annotations
 
-from agent_evaluator import regulatory
+from pathlib import Path
+
+import pytest
+
+from agent_evaluator import celex, regulatory
+from agent_evaluator.regulatory import load_sources
 
 
 def test_every_cited_article_is_pinned() -> None:
@@ -81,3 +86,43 @@ def test_owner_verified_requires_a_machine_readable_source() -> None:
         assert any(
             "publications.europa.eu/resource/" in url for url in sources.verification_sources
         ), "owner_verified is true without a source a check could have read"
+
+
+# --- The shipped register holds to its own rules -------------------------------------------------
+
+
+def _mutated(tmp_path, old: str, new: str):
+    source = (
+        Path(__file__).resolve().parents[1] / "src" / "agent_evaluator" / "regulatory_sources.yaml"
+    ).read_text(encoding="utf-8")
+    assert old in source, old
+    path = tmp_path / "sources.yaml"
+    path.write_text(source.replace(old, new, 1), encoding="utf-8")
+    return path
+
+
+def test_a_malformed_act_identifier_is_refused(tmp_path):
+    """The consolidation check derives a base from this; a typo collects another act's versions."""
+    with pytest.raises(celex.CelexError, match="not a CELEX identifier"):
+        load_sources(_mutated(tmp_path, "celex: 32024R1689", "celex: 32024R168"))
+
+
+def test_a_pin_belonging_to_another_act_is_refused(tmp_path):
+    """The rule a supplied register has to satisfy. This register was exempt from it until now."""
+    with pytest.raises(celex.CelexError, match="not a consolidation of"):
+        load_sources(
+            _mutated(
+                tmp_path,
+                "consolidated_celex: 02024R1689-20260727",
+                "consolidated_celex: 02022R2554-20221227",
+            )
+        )
+
+
+def test_an_amending_act_is_held_to_the_same_rule(tmp_path):
+    with pytest.raises(celex.CelexError, match="not a CELEX identifier"):
+        load_sources(_mutated(tmp_path, "celex: 32026R1744", "celex: 2026R1744"))
+
+
+def test_the_shipped_register_passes_the_rules_it_imposes():
+    load_sources()

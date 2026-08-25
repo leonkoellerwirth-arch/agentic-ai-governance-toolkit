@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import time
 import urllib.parse
 import urllib.request
@@ -28,6 +27,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Literal
 
+from . import celex as celex_mod
 from .evidence import SCHEMA_VERSION as EVIDENCE_SCHEMA_VERSION
 from .regulatory import load_sources
 
@@ -470,8 +470,9 @@ def render_markdown(record: dict[str, Any], lang: str = "en") -> str:
 # list, not a selection, and the selection is the part a reader is actually relying on. The reason
 # is the register holder's statement. This tool does not verify it, and says so in the record.
 
-CELEX = re.compile(r"3\d{4}[A-Z]\d{4}")
-CONSOLIDATED = re.compile(r"0\d{4}[A-Z]\d{4}-\d{8}")
+CELEX = celex_mod.ACT
+CONSOLIDATED = celex_mod.CONSOLIDATED
+consolidated_base = celex_mod.consolidated_base
 ENDPOINT = "https://publications.europa.eu/webapi/rdf/sparql"
 
 # Two routes to the same question, on purpose.
@@ -525,11 +526,6 @@ class RegisterEntry:
     pinned: str | None
 
 
-def consolidated_base(celex: str) -> str:
-    """32023R1230 -> 02023R1230. The prefix every consolidation of that work shares."""
-    return "0" + celex[1:]
-
-
 def load_profile(
     path: str | Path,
 ) -> tuple[list[RegisterEntry], list[Exclusion], dict[str, Any]]:
@@ -557,8 +553,10 @@ def load_profile(
             raise ProfileError(f"{where} is missing {', '.join(missing)}.")
         key, act = str(item["key"]).strip(), str(item["act"]).strip()
         celex, why = str(item["celex"]).strip(), str(item["why"]).strip()
-        if not CELEX.fullmatch(celex):
-            raise ProfileError(f"{where}: {celex!r} is not a CELEX identifier of a legal act.")
+        try:
+            celex_mod.check_act(celex, where)
+        except celex_mod.CelexError as error:
+            raise ProfileError(str(error)) from error
         if key in seen_keys:
             raise ProfileError(f"{where}: key {key!r} is used twice.")
         if celex in seen_celex:
@@ -568,17 +566,10 @@ def load_profile(
 
         pinned = str(item.get("pinned") or "").strip() or None
         if pinned is not None:
-            # Versions are compared as strings. That is only sound when both are consolidations of
-            # the same work, so a pin belonging to another act is refused rather than compared.
-            if not CONSOLIDATED.fullmatch(pinned):
-                raise ProfileError(
-                    f"{where}: {pinned!r} is not a consolidated CELEX (0YYYYTNNNN-YYYYMMDD)."
-                )
-            if not pinned.startswith(consolidated_base(celex) + "-"):
-                raise ProfileError(
-                    f"{where}: pinned {pinned} is not a consolidation of {celex}. Comparing them "
-                    "would report a currency that was never checked."
-                )
+            try:
+                celex_mod.check_pin(pinned, celex, where)
+            except celex_mod.CelexError as error:
+                raise ProfileError(str(error)) from error
         entries.append(RegisterEntry(key, act, celex, why, pinned))
 
     if not entries:
@@ -594,8 +585,10 @@ def load_profile(
             raise ProfileError(f"{where} is missing {', '.join(missing)}.")
         celex = str(item.get("celex") or "").strip() or None
         if celex is not None:
-            if not CELEX.fullmatch(celex):
-                raise ProfileError(f"{where}: {celex!r} is not a CELEX identifier of a legal act.")
+            try:
+                celex_mod.check_act(celex, where)
+            except celex_mod.CelexError as error:
+                raise ProfileError(str(error)) from error
             if celex in seen_celex:
                 # Watched and deliberately not watched are not both true of the same act. Rendering
                 # the contradiction would leave the reader to pick which half to believe.
@@ -658,7 +651,7 @@ def live_resolver(
         raise RuntimeError(last)
 
     def resolve(base: str) -> list[str]:
-        act = "3" + base[1:]
+        act = celex_mod.act_of(base)
         found: set[str] = set()
         failures: list[str] = []
         for query in (_QUERY % base, _RELATION_QUERY % act):

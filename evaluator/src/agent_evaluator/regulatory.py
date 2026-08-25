@@ -25,6 +25,8 @@ from pathlib import Path
 
 import yaml
 
+from . import celex
+
 # "Art. 5", "Art. 24–27", "Artikel 9", "Article 50", "Annex III", "Anhang IV".
 # En dash and hyphen both occur in the docs; both normalise to a hyphen.
 _REFERENCE = re.compile(
@@ -109,6 +111,19 @@ def load_sources(path: str | Path | None = None) -> Sources:
     else:
         raw = Path(path).read_text(encoding="utf-8")
     data = yaml.safe_load(raw)
+
+    # The register file a reader supplies is refused if an identifier is malformed or a pin
+    # belongs to another act. This register was exempt from both, which is the wrong way round:
+    # a rule its author does not apply to their own data is a rule they have not tested. A bad
+    # `celex` here is not cosmetic — the consolidation check derives a base from it, so a mistyped
+    # act silently collects another act's consolidations.
+    for fw in data["frameworks"]:
+        where = f"regulatory_sources.yaml: framework {fw['key']}"
+        celex.check_act(str(fw["celex"]), where)
+        if fw.get("consolidated_celex"):
+            celex.check_pin(str(fw["consolidated_celex"]), str(fw["celex"]), where)
+        for a in fw.get("amended_by", []):
+            celex.check_act(str(a["celex"]), f"{where}, amendment {a['act']}")
 
     frameworks = tuple(
         Framework(
