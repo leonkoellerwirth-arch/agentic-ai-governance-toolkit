@@ -69,9 +69,10 @@ only ever produces approvals has demonstrated nothing.
 ## The honest limits
 
 The supervisory depth is German and EU financial. That is the strength and the ceiling: outside
-that sector the control mappings are illustrative rather than authoritative. The register of
-regulatory references still carries `owner_verified: false` — what has been checked and what has
-not is listed in [`VERIFICATION.md`](VERIFICATION.md) rather than glossed. And one person
+that sector the control mappings are illustrative rather than authoritative. The register of regulatory
+references is checked against the primary text from the Publications Office, and the build fails if
+a citation drifts from it — which is worth stating plainly only because it says nothing about
+whether an obligation applies to your case. And one person
 maintains all of it, which is why the scope is narrow on purpose.
 
 ---

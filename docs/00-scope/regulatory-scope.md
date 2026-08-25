@@ -81,17 +81,15 @@ response payload, where someone acting on it will see it, not in a document they
 
 ## Verification status
 
-`regulatory_sources.yaml` carries an `owner_verified` flag. While it is `false`, the article
-references have been recorded and pinned but not read back against the original text by a person.
+`regulatory_sources.yaml` carries an `owner_verified` flag. It is `true` since 2026-08-25: every
+cited heading was compared against the primary text from the Publications Office Cellar repository,
+the headings are committed, and the build fails if a topic drifts from them. What was checked, how,
+and the seven labels that turned out to be wrong are in the [verification log](../../VERIFICATION.md).
 
-What has been checked, by what means, and what is left is recorded in the
-[verification log](../../VERIFICATION.md). As of 2026-08-25 the provenance — identifiers,
-citations, consolidated version — is confirmed; six topic labels are not, and one of them is
-wrong rather than merely imprecise.
-
-That is a legitimate interim state and an illegitimate resting state. Anything built on the register
-inherits its verification status, and a tool that circulates an unverified reference circulates it
-faster than it can be corrected.
+**What that flag does not mean.** It does not mean an obligation applies to your system, that the
+mapping is complete for your case, or that a lawyer has read the register. It means the citations
+point where they say they point — the first question, not the last one, and the only one this
+project answers.
 
 ## Dated obligations
 
@@ -113,8 +111,9 @@ None of this is legal advice — see [`DISCLAIMER.md`](../../DISCLAIMER.md).
 
 ## Open questions
 
-- `owner_verified` is `false` at the time of writing. The count of references and the date of the
-  last verification pass belong in this section once that pass has been run.
+- The register covers the two acts this toolkit cites. Whether the same discipline should extend
+  to MaRisk — which the sibling repository maps and this one does not — is an open decision, not
+  an oversight.
 - The boundary in "Where triage sits" is stated but not yet enforced by a test. A check that every
   tool output carrying a control level also carries its scope disclaimer would make it structural
   rather than editorial.
