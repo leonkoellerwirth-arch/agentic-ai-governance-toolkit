@@ -99,10 +99,11 @@ def legal_status(prepared_for: str, as_json: bool, profile: Path | None, lang: s
     acts = record["acts"]
     if any(a["status"] == "superseded" for a in acts):
         raise SystemExit(1)
-    # Every act unchecked means the source answered for none of them. Reporting that as a clean
-    # run is the false-comfort mode this record exists to prevent; exit 2 matches the convention
+    # One act that could not be checked is already not a clean run. The record says so line by
+    # line, but the exit code is what a pipeline acts on, and 0 there reads as a clearance for a
+    # run that left a question open. Exit 2 matches the convention
     # scripts/check-consolidations.sh already uses for an unreachable endpoint.
-    if acts and all(a["status"] == "unchecked" for a in acts):
+    if any(a["status"] == "unchecked" for a in acts):
         raise SystemExit(2)
 
 

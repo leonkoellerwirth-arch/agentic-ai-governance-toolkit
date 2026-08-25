@@ -443,3 +443,24 @@ def test_a_pin_must_be_a_consolidation_of_its_own_act():
     for bad in ("02024R1689-20260727", "02023R1230", "2023R1230-20260727"):
         with pytest.raises(celex.CelexError):
             celex.check_pin(bad, "32023R1230", "x")
+
+
+def test_one_unchecked_act_is_not_a_clean_run(tmp_path, monkeypatch):
+    """The record says it line by line; the exit code is what a pipeline acts on."""
+    from click.testing import CliRunner
+
+    from agent_evaluator.cli import main
+
+    text = MACHINERY.replace("    pinned: 02023R1230-20260727\n", "")
+    path = _register(tmp_path, text)
+    resolve = _fixed({"02023R1230": ["02023R1230-20260727"], "02024R1689": ["02024R1689-20240712"]})
+    monkeypatch.setattr(ls, "live_resolver", lambda *a, **k: resolve)
+
+    record = ls.build_profile_record(path, resolve=resolve)
+    assert {a["key"]: a["status"] for a in record["acts"]} == {
+        "machinery": "unchecked",
+        "ai_act": "current",
+    }
+
+    result = CliRunner().invoke(main, ["legal-status", "--profile", str(path)])
+    assert result.exit_code == 2, result.output
