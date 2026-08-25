@@ -1,0 +1,22 @@
+{
+  "_source": "SPARQL, https://publications.europa.eu/webapi/rdf/sparql — every consolidated version of the pinned work",
+  "_why": "A pin makes a citation checkable and never notices that the law moved. This records which consolidations exist, so the gate can tell when the pin has fallen behind.",
+  "_checked": "2026-08-25",
+  "frameworks": {
+    "eu_ai_act": {
+      "base": "02024R1689",
+      "pinned": "02024R1689-20260727",
+      "available": [
+        "02024R1689-20240712",
+        "02024R1689-20260727"
+      ]
+    },
+    "dora": {
+      "base": "02022R2554",
+      "pinned": "02022R2554-20221227",
+      "available": [
+        "02022R2554-20221227"
+      ]
+    }
+  }
+}

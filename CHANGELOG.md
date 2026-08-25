@@ -74,6 +74,29 @@ All notable changes to this project are documented here. The format follows
   The decision stands, on a discipline argument rather than a modelling one, and the entry states
   what would change it.
 
+### Added
+
+- **Consolidation check** ([`scripts/check-consolidations.sh`](scripts/check-consolidations.sh)):
+  asks the Publications Office SPARQL endpoint which consolidated versions of a pinned act exist,
+  and reports one newer than the pin as a finding. A pin is what makes a citation checkable and
+  also what lets a register go quietly stale, because a pin never notices that the law moved.
+
+  It found something on its first run: **DORA pinned the base act while a consolidation existed**,
+  so the register could not have told whether the text had been amended. DORA is now pinned to
+  `02022R2554-20221227` — a consolidation that carries no amendments, which is precisely the point:
+  before, nothing here could establish that.
+
+  The mechanism knows nothing about financial supervision. It takes a CELEX identifier and asks
+  what consolidations exist, which works for the GDPR, NIS2, MiCA, the Data Act, the Cyber
+  Resilience Act, the DSA and the Machinery Regulation alike — the last of which has three
+  consolidations, the newest dated 27 July 2026, because the same Digital Omnibus that moved the AI
+  Act's application dates amended it too.
+
+  `consolidations.json` records what the endpoint answered and when, and three offline tests compare
+  the register against it: every framework must pin a consolidation rather than a base act, the pin
+  must be the newest recorded, and the snapshot must say when it was checked — because "no newer
+  version" without a date is a claim with no shelf life.
+
 ### Fixed
 
 - **Four checklist rows were widened to the articles they cite.** Correcting a label does not

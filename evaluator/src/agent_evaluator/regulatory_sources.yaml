@@ -91,6 +91,10 @@ frameworks:
     act_de: Verordnung (EU) 2022/2554
     celex: 32022R2554
     oj: OJ L 333, 27.12.2022, pp. 1–79
+    # Pinned to the consolidation rather than the base act, so a citation names a text that cannot
+    # move underneath it. This one carries no amendments — its date is the publication date — but
+    # pinning the base act meant the register could not tell whether it did.
+    consolidated_celex: 02022R2554-20221227
     consolidated_as_of: 2022-12-27
     url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554
     amended_by: []

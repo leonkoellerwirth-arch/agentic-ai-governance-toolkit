@@ -61,7 +61,7 @@ if this page carries one no checklist cites.
 |---|---|
 | CELEX | `32022R2554` |
 | Official Journal | OJ L 333, 27.12.2022, pp. 1–79 |
-| Version checked | as of 2022-12-27 |
+| Version checked | consolidated text 02022R2554-20221227, as of 2022-12-27 |
 | Text | [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554) |
 
 **Amendments incorporated**

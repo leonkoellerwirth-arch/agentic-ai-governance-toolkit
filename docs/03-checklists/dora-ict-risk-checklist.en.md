@@ -12,7 +12,7 @@ resilience discipline applies to it like any other.
 > [`dora-ict-risk-checklist.de.md`](dora-ict-risk-checklist.de.md).
 
 <!-- GENERATED:source_lock START — edit regulatory_sources.yaml, then run `agent-eval render-docs` -->
-> **Source lock.** The article references below point at **Regulation (EU) 2022/2554** (CELEX 32022R2554, OJ L 333, 27.12.2022, pp. 1–79) — as of 2022-12-27.
+> **Source lock.** The article references below point at **Regulation (EU) 2022/2554** (CELEX 32022R2554, OJ L 333, 27.12.2022, pp. 1–79) — consolidated text 02022R2554-20221227, as of 2022-12-27.
 > Last checked against the text on 2026-08-25: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554). Pinned in [`regulatory-sources.md`](regulatory-sources.md).
 > This records **which text**, not what it requires of you.
 <!-- GENERATED:source_lock END -->
