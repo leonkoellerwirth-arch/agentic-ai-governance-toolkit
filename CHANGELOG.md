@@ -76,6 +76,21 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **A pin the source does not know is no longer reported as current.** `assess()` compared the pin
+  against the newest consolidation alone, which silently presumes the source knows the pin at all.
+  It does not: a mistyped or invented date sorts after every real consolidation, so
+  `02024R1689-20991231` came back `current` — the record asserting a currency nobody checked, which
+  is the one failure mode this whole artifact exists to prevent. The judgement now takes the full
+  list and a pin that is not a member of it is `unchecked`, with a finding that names the
+  identifier and tells the reader to confirm it.
+
+  This also closes an asymmetry: the register-file path refused a pin belonging to another act, the
+  built-in path never checked. Membership in the source's own list covers both, and makes the
+  string comparison sound by construction rather than by a guard somewhere else.
+
+  A source that lists no consolidation at all can likewise no longer confirm a pin. An empty answer
+  is an answer about the source, not a confirmation of what we cite.
+
 - **What was deliberately left out** (`excluded:` in a register file): a register that cannot say
   what it excluded is a list with a gap in it — a reader cannot tell an act that was considered and
   dropped from one nobody thought of. Each exclusion needs a reason; `revisit_when` records the

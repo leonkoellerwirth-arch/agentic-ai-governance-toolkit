@@ -34,7 +34,7 @@ from .regulatory import load_sources
 SCHEMA = (
     "https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/legal-status-record"
 )
-SCHEMA_VERSION = "1.3.0"
+SCHEMA_VERSION = "1.4.0"
 
 Status = Literal["current", "superseded", "unchecked"]
 
@@ -77,6 +77,11 @@ NOTES: dict[str, dict[str, str]] = {
             "The register pins the base act while consolidations exist (newest {newest}), so "
             "nothing here can establish whether the cited text still reads as cited."
         ),
+        "pin_unknown": (
+            "The source does not report {pinned} among the consolidated versions of this act. A "
+            "citation against a version the source does not know is not checked by this record — "
+            "confirm the identifier before relying on it."
+        ),
     },
     "de": {
         "no_data": (
@@ -102,6 +107,12 @@ NOTES: dict[str, dict[str, str]] = {
         "base_act_superseded": (
             "Das Register zitiert den Basisrechtsakt, obwohl Konsolidierungen existieren (neueste "
             "{newest}). Damit lässt sich nicht feststellen, ob der zitierte Text noch so lautet."
+        ),
+        "pin_unknown": (
+            "Die Quelle führt {pinned} nicht unter den konsolidierten Fassungen dieses "
+            "Rechtsakts. Eine Fundstelle gegen eine Fassung, welche die Quelle nicht kennt, ist "
+            "durch diesen Beleg nicht geprüft — die Kennung ist zu bestätigen, bevor man sich "
+            "darauf stützt."
         ),
     },
 }
@@ -148,12 +159,20 @@ def _consolidations() -> dict[str, Any]:
     return json.loads(resource.read_text(encoding="utf-8"))
 
 
-def assess(pinned: str | None, newest: str | None) -> tuple[Status, str, dict[str, Any]]:
-    """What the two version strings permit us to say — the only place that judgement is made.
+def assess(pinned: str | None, available: list[str]) -> tuple[Status, str, dict[str, Any]]:
+    """What the source permits us to say about the pin — the only place that judgement is made.
 
-    Comparing them as strings is sound only because a pin is refused unless it is a consolidation
-    of the act it sits under; see `load_profile`.
+    It takes the whole list and not just the newest entry, because the question "is the pin behind"
+    presumes the source knows the pin at all. A pin the source does not list is not current and not
+    superseded: it is unverified, and reporting it as either would be the record asserting a
+    currency nobody checked. That case is not hypothetical — a mistyped or invented date sorts
+    after every real consolidation and would otherwise read as the newest text there is.
+
+    Comparing versions as strings is sound because they now have to be members of the same list.
     """
+    newest = available[-1] if available else None
+    if pinned and pinned not in available:
+        return "unchecked", "pin_unknown", {"pinned": pinned, "newest": newest or "—"}
     if pinned and newest and pinned < newest:
         return "superseded", "superseded", {"newest": newest, "pinned": pinned}
     if pinned:
@@ -190,7 +209,7 @@ def statuses() -> tuple[list[ActStatus], str | None]:
             continue
         available = entry.get("available") or []
         newest = available[-1] if available else None
-        status, key, args = assess(pinned, newest)
+        status, key, args = assess(pinned, available)
         out.append(
             ActStatus(
                 framework.key,
@@ -635,7 +654,7 @@ def profile_statuses(entries: list[RegisterEntry], resolve: Resolver) -> list[Ac
             )
             continue
         newest = available[-1] if available else None
-        status, key, args = assess(entry.pinned, newest)
+        status, key, args = assess(entry.pinned, available)
         out.append(
             ActStatus(
                 entry.key,

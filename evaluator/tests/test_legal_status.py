@@ -101,6 +101,12 @@ def _register(tmp_path, text=MACHINERY, name="register.yaml"):
     return path
 
 
+REAL = {
+    "02023R1230": ["02023R1230-20260727"],
+    "02024R1689": ["02024R1689-20240712"],
+}
+
+
 def _fixed(mapping):
     def resolve(base):
         if base not in mapping:
@@ -160,18 +166,14 @@ def test_a_superseded_pin_in_a_supplied_register_is_found(tmp_path):
 
 def test_the_record_says_the_reason_is_not_verified(tmp_path):
     """The reason is the register holder's claim. Presenting it as checked would be the lie."""
-    record = ls.build_profile_record(
-        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
-    )
+    record = ls.build_profile_record(_register(tmp_path), resolve=_fixed(REAL))
     assert all("not verified by this tool" in a["why_stated_by"] for a in record["acts"])
     assert "does not verify that the selection is complete" in ls.render_markdown(record)
 
 
 def test_a_supplied_register_is_identified_by_digest(tmp_path):
     """Which selection the record was made against has to survive into the record itself."""
-    record = ls.build_profile_record(
-        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
-    )
+    record = ls.build_profile_record(_register(tmp_path), resolve=_fixed(REAL))
     assert record["register"]["entries"] == 2
     assert len(record["register"]["sha256"]) == 64
     assert record["schema_version"] == ls.SCHEMA_VERSION
@@ -179,9 +181,7 @@ def test_a_supplied_register_is_identified_by_digest(tmp_path):
 
 def test_the_scope_still_names_what_was_not_watched(tmp_path):
     """A supplied register must not quietly widen the promise the record makes."""
-    record = ls.build_profile_record(
-        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
-    )
+    record = ls.build_profile_record(_register(tmp_path), resolve=_fixed(REAL))
     assert "national law" in record["scope"]["not_covered"]
     assert "2 acts listed above, and nothing else" in record["scope"]["watched"]
 
@@ -207,15 +207,17 @@ def test_every_scaffolding_phrase_exists_in_every_language():
 
 def test_the_judgement_only_produces_findings_that_exist(tmp_path):
     """assess() is the only place the two versions are compared; its keys must all be renderable."""
+    both = ["02024R1689-20240712", "02024R1689-20260727"]
     cases = [
-        (None, None),
-        (None, "02024R1689-20240712"),
-        ("02024R1689-20240712", None),
-        ("02024R1689-20240712", "02024R1689-20260727"),
-        ("02024R1689-20260727", "02024R1689-20260727"),
+        (None, []),
+        (None, both),
+        ("02024R1689-20240712", []),
+        ("02024R1689-20240712", both),
+        ("02024R1689-20260727", both),
+        ("02024R1689-20991231", both),
     ]
-    for pinned, newest in cases:
-        _, key, args = ls.assess(pinned, newest)
+    for pinned, available in cases:
+        _, key, args = ls.assess(pinned, available)
         assert key in ls.NOTES["en"]
         for lang in ls.LANGUAGES:
             ls.note_text(key, args, lang)  # raises on a missing placeholder
@@ -223,9 +225,7 @@ def test_the_judgement_only_produces_findings_that_exist(tmp_path):
 
 def test_the_german_record_still_says_what_it_did_not_watch(tmp_path):
     """Translating away the limits would be the one change that makes the record dishonest."""
-    record = ls.build_profile_record(
-        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
-    )
+    record = ls.build_profile_record(_register(tmp_path), resolve=_fixed(REAL))
     german = ls.render_markdown(record, "de")
     assert "nationales Recht" in german
     assert "Rechtsprechung" in german
@@ -234,9 +234,7 @@ def test_the_german_record_still_says_what_it_did_not_watch(tmp_path):
 
 
 def test_the_german_record_carries_no_english_scaffolding(tmp_path):
-    record = ls.build_profile_record(
-        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
-    )
+    record = ls.build_profile_record(_register(tmp_path), resolve=_fixed(REAL))
     german = ls.render_markdown(record, "de")
     for leak in ("Not covered", "What was watched", "Legal status record", "Source last checked"):
         assert leak not in german, f"{leak!r} survived into the German record"
@@ -280,7 +278,7 @@ def test_an_exclusion_is_never_version_checked(tmp_path):
     """Checking it would report currency for an act the register does not claim to watch."""
     record = ls.build_profile_record(
         _register(tmp_path, MACHINERY + EXCLUDED),
-        resolve=_fixed({"02023R1230": [], "02024R1689": []}),
+        resolve=_fixed(REAL),
     )
     assert {a["celex"] for a in record["acts"]} == {"32023R1230", "32024R1689"}
     assert len(record["excluded"]) == 2
@@ -291,7 +289,7 @@ def test_the_record_says_an_exclusion_is_a_decision_nobody_re_checks(tmp_path):
     """An exclusion can go stale — Ökodesign binds the day a delegated act appears."""
     record = ls.build_profile_record(
         _register(tmp_path, MACHINERY + EXCLUDED),
-        resolve=_fixed({"02023R1230": [], "02024R1689": []}),
+        resolve=_fixed(REAL),
     )
     assert "not monitored" in record["excluded"][0]["decided_by"]
     for lang, phrase in (
@@ -304,7 +302,7 @@ def test_the_record_says_an_exclusion_is_a_decision_nobody_re_checks(tmp_path):
 def test_the_exclusions_are_shown_in_both_languages(tmp_path):
     record = ls.build_profile_record(
         _register(tmp_path, MACHINERY + EXCLUDED),
-        resolve=_fixed({"02023R1230": [], "02024R1689": []}),
+        resolve=_fixed(REAL),
     )
     english = ls.render_markdown(record, "en")
     german = ls.render_markdown(record, "de")
@@ -316,10 +314,37 @@ def test_the_exclusions_are_shown_in_both_languages(tmp_path):
 
 def test_a_record_without_exclusions_says_nothing_about_them(tmp_path):
     """Silence is right here: a register that excluded nothing must not imply it considered any."""
-    record = ls.build_profile_record(
-        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
-    )
+    record = ls.build_profile_record(_register(tmp_path), resolve=_fixed(REAL))
     assert record["excluded"] == []
     for lang in ls.LANGUAGES:
         rendered = ls.render_markdown(record, lang)
         assert ls.WORDS[lang]["excluded_head"] not in rendered
+
+
+def test_a_pin_the_source_does_not_know_is_never_current():
+    """A mistyped or invented date sorts after every real consolidation and would read as newest."""
+    available = ["02024R1689-20240712", "02024R1689-20260727"]
+    for pinned in ("02024R1689-20991231", "02024R1689-20240713", "02024R1689-20200101"):
+        status, key, _ = ls.assess(pinned, available)
+        assert (status, key) == ("unchecked", "pin_unknown"), pinned
+
+
+def test_a_source_that_lists_no_consolidation_cannot_confirm_a_pin():
+    """An empty answer is an answer about the source, not a confirmation of what we cite."""
+    status, key, _ = ls.assess("02024R1689-20240712", [])
+    assert (status, key) == ("unchecked", "pin_unknown")
+
+
+def test_an_unknown_pin_says_so_in_both_languages(tmp_path):
+    text = MACHINERY.replace("02023R1230-20260727", "02023R1230-20991231")
+    record = ls.build_profile_record(_register(tmp_path, text), resolve=_fixed(REAL))
+    by_key = {a["key"]: a for a in record["acts"]}
+    assert by_key["machinery"]["status"] == "unchecked"
+    assert "02023R1230-20991231" in ls.render_markdown(record, "en")
+    assert "Die Quelle führt" in ls.render_markdown(record, "de")
+
+
+def test_a_foreign_pin_cannot_reach_the_comparison_by_either_route(tmp_path):
+    """load_profile refuses it; if one ever slipped past, assess would not call it current."""
+    status, _, _ = ls.assess("02024R1689-20240712", ["02023R1230-20260727"])
+    assert status == "unchecked"
