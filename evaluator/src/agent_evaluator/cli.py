@@ -22,7 +22,7 @@ from . import __version__
 from .action_authority import check_matrix
 from .action_authority import update_docs as update_authority_docs
 from .evidence import write_manifest
-from .legal_status import build_record, render_markdown
+from .legal_status import ProfileError, build_profile_record, build_record, render_markdown
 from .llm_judge import JudgeUnavailable, judge_output
 from .log_analyzer import analyze_log_file
 from .policy import check_coverage
@@ -64,15 +64,34 @@ def manifest(evidence_dir: Path, commit: str) -> None:
 @main.command("legal-status")
 @click.option("--for", "prepared_for", default="", help="Who the record is prepared for.")
 @click.option("--json", "as_json", is_flag=True, help="Emit the record as JSON.")
-def legal_status(prepared_for: str, as_json: bool) -> None:
+@click.option(
+    "--profile",
+    "profile",
+    default=None,
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    help="A register file to check instead of the acts this toolkit itself cites.",
+)
+def legal_status(prepared_for: str, as_json: bool, profile: Path | None) -> None:
     """State, for every pinned act, whether the cited version is still the newest known."""
-    record = build_record(prepared_for)
+    if profile is None:
+        record = build_record(prepared_for)
+    else:
+        try:
+            record = build_profile_record(profile, prepared_for)
+        except ProfileError as error:
+            raise click.ClickException(str(error)) from error
     if as_json:
         click.echo(json.dumps(record, indent=2, ensure_ascii=False))
     else:
         click.echo(render_markdown(record))
-    if any(a["status"] == "superseded" for a in record["acts"]):
+    acts = record["acts"]
+    if any(a["status"] == "superseded" for a in acts):
         raise SystemExit(1)
+    # Every act unchecked means the source answered for none of them. Reporting that as a clean
+    # run is the false-comfort mode this record exists to prevent; exit 2 matches the convention
+    # scripts/check-consolidations.sh already uses for an unreachable endpoint.
+    if acts and all(a["status"] == "unchecked" for a in acts):
+        raise SystemExit(2)
 
 
 @main.command()

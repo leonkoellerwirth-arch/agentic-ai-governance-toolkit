@@ -1,0 +1,34 @@
+# A register of legal acts you watch — a template, not a recommendation.
+#
+# The acts this toolkit itself cites are checked without a register file. This is for readers
+# watching a different body of law: whoever keeps the register decides what belongs in it.
+#
+#   agent-eval legal-status --profile templates/register.example.yaml --for "Your organisation"
+#
+# Every act needs a reason. A list of acts with no reason per act is a list, not a selection, and
+# the selection is what a reader ends up relying on. The reason is yours: the tool records it,
+# marks it as your statement, and does not verify it. What it does check is whether the version
+# you cite is still the newest consolidation the Publications Office reports — and an act it could
+# not reach is reported as unchecked, never as current.
+#
+# `pinned` is the consolidated CELEX you actually cite (0YYYYTNNNN-YYYYMMDD). Leave it out and the
+# act is reported as unchecked: a register that pins the base act cannot notice that the law moved.
+
+register: Example register
+
+acts:
+  - key: ai_act
+    act: Regulation (EU) 2024/1689 (AI Act)
+    celex: 32024R1689
+    pinned: 02024R1689-20260727
+    why: >-
+      Replace this with your own reason. It should say what in your organisation brings the act
+      into scope — not what the act is about.
+
+  - key: machinery
+    act: Regulation (EU) 2023/1230 (Machinery Regulation)
+    celex: 32023R1230
+    pinned: 02023R1230-20260727
+    why: >-
+      Replace this too. An act nobody can say a reason for does not belong in a register somebody
+      is relying on.

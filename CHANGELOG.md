@@ -76,6 +76,23 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Registers the reader owns** (`agent-eval legal-status --profile <file>`, template in
+  `templates/register.example.yaml`): the acts above are the ones this toolkit cites. Anyone
+  watching a different body of law keeps their own register, and that register is theirs.
+
+  **Every act must state why it is in the register.** A list of acts with no reason per act is a
+  list, not a selection, and the selection is what a reader ends up relying on. The reason is the
+  register holder's statement: the record carries it, marks it as unverified, and says in its own
+  text that this tool checks version currency and not whether the selection is complete.
+
+  A pin that is not a consolidation of the act it sits under is refused rather than compared —
+  versions compare as strings, and across two different works that comparison is meaningless, so
+  reporting it would claim a currency nobody checked. The endpoint answers 502/503 often enough
+  that a single attempt is not a check, so the resolver retries; an act it still cannot reach is
+  `unchecked`. A record in which no act could be checked exits 2, matching
+  `scripts/check-consolidations.sh` — reporting that run as clean is the false-comfort mode in a
+  different hat.
+
 - **Legal-status record** (`agent-eval legal-status`, `--json` for the machine-readable form): for
   every pinned act, the version cited, the newest the Publications Office reports, when that was
   checked, and against which source. Exits non-zero when a pin has been superseded.

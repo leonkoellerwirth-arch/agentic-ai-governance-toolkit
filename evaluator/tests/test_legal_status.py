@@ -75,3 +75,112 @@ def test_markdown_carries_the_scope_not_only_the_table(record: dict[str, Any]) -
     assert "What an absence of findings means" in rendered
     for item in record["scope"]["not_covered"]:
         assert item in rendered
+
+
+# --- Registers supplied by the reader --------------------------------------------------------
+
+MACHINERY = """
+register: Example register
+acts:
+  - key: machinery
+    act: Machinery Regulation
+    celex: 32023R1230
+    pinned: 02023R1230-20260727
+    why: The products placed on the market are machinery within the meaning of the Regulation.
+  - key: ai_act
+    act: AI Act
+    celex: 32024R1689
+    pinned: 02024R1689-20240712
+    why: A safety component of that machinery is an AI system.
+"""
+
+
+def _register(tmp_path, text=MACHINERY, name="register.yaml"):
+    path = tmp_path / name
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def _fixed(mapping):
+    def resolve(base):
+        if base not in mapping:
+            raise RuntimeError("no answer")
+        return mapping[base]
+
+    return resolve
+
+
+def test_an_act_without_a_reason_is_not_a_register(tmp_path):
+    """A list of acts with no reason per act is a list. The selection is what a reader relies on."""
+    text = MACHINERY.replace(
+        "    why: The products placed on the market are machinery"
+        " within the meaning of the Regulation.\n",
+        "",
+    )
+    with pytest.raises(ls.ProfileError, match="missing why"):
+        ls.load_profile(_register(tmp_path, text))
+
+
+def test_a_pin_from_another_act_is_refused_not_compared(tmp_path):
+    """Versions compare as strings. Across works that comparison is meaningless, not wrong."""
+    text = MACHINERY.replace("02023R1230-20260727", "02024R1689-20240712")
+    with pytest.raises(ls.ProfileError, match="not a consolidation of 32023R1230"):
+        ls.load_profile(_register(tmp_path, text))
+
+
+def test_the_same_act_cannot_be_listed_twice(tmp_path):
+    text = MACHINERY + MACHINERY.split("acts:", 1)[1].replace("key: machinery", "key: other")
+    with pytest.raises(ls.ProfileError):
+        ls.load_profile(_register(tmp_path, text))
+
+
+def test_an_unreachable_source_is_unchecked_never_current(tmp_path):
+    """The one failure mode that turns this record from evidence into false comfort."""
+    entries, _ = ls.load_profile(_register(tmp_path))
+    statuses = ls.profile_statuses(entries, _fixed({}))
+    assert {s.status for s in statuses} == {"unchecked"}
+    assert all("could not be reached" in s.note for s in statuses)
+
+
+def test_a_superseded_pin_in_a_supplied_register_is_found(tmp_path):
+    record = ls.build_profile_record(
+        _register(tmp_path),
+        resolve=_fixed(
+            {
+                "02023R1230": ["02023R1230-20260727"],
+                "02024R1689": ["02024R1689-20240712", "02024R1689-20260727"],
+            }
+        ),
+    )
+    by_key = {a["key"]: a for a in record["acts"]}
+    assert by_key["machinery"]["status"] == "current"
+    assert by_key["ai_act"]["status"] == "superseded"
+    assert "02024R1689-20260727" in by_key["ai_act"]["note"]
+
+
+def test_the_record_says_the_reason_is_not_verified(tmp_path):
+    """The reason is the register holder's claim. Presenting it as checked would be the lie."""
+    record = ls.build_profile_record(
+        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
+    )
+    assert all("not verified by this tool" in a["why_stated_by"] for a in record["acts"])
+    assert "does not verify that the selection is complete" in ls.render_markdown(record)
+
+
+def test_a_supplied_register_is_identified_by_digest(tmp_path):
+    """Which selection the record was made against has to survive into the record itself."""
+    record = ls.build_profile_record(
+        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
+    )
+    assert record["register"]["entries"] == 2
+    assert len(record["register"]["sha256"]) == 64
+    assert record["schema_version"] == "1.1.0"
+
+
+def test_the_scope_still_names_what_was_not_watched(tmp_path):
+    """A supplied register must not quietly widen the promise the record makes."""
+    record = ls.build_profile_record(
+        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
+    )
+    assert "national law" in record["scope"]["not_covered"]
+    assert "2 acts listed above, and nothing else" in record["scope"]["watched"]
