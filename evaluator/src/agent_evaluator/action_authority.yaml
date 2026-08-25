@@ -1,0 +1,217 @@
+# =============================================================================
+# THE ACTION AUTHORITY MATRIX — what an agent may do on its own, what needs a
+# human, and what is refused outright.
+#
+# The rubric answers "how much control does this agent need". This file answers
+# the question a reviewer asks next and no rubric answers: "so what is it
+# actually allowed to do?" One row per action, one authority per row, and an
+# evidence artifact for every row including the forbidden ones — a refusal that
+# leaves no trace cannot be audited, and an attempt is itself a finding.
+#
+# `escalates_at` is the point of the file. Few actions are categorically safe or
+# categorically forbidden; most are safe until the blast radius grows. An action
+# marked automatic with escalates_at C3 is automatic at C1 and C2 and needs a
+# human from C3 up. The band names come from rubric.yaml and are checked against
+# it — an escalation to a band that does not exist fails the gate.
+#
+# What this file is NOT: a permission system. Nothing here enforces anything.
+# It is the declared boundary an implementation is measured against, and the
+# thing a Principal Architect can disagree with in one reading.
+#
+# Read by:   agent_evaluator.action_authority
+# Rendered:  docs/03-checklists/action-authority-matrix.md
+#            → run `agent-eval render-docs` after editing.
+# Tested:    evaluator/tests/test_action_authority.py
+# =============================================================================
+
+version: 1
+title: Action authority matrix
+
+authorities:
+  - key: automatic
+    label: Automatic
+    marker: "✓"
+    summary: The agent may perform this without asking, within its declared scope.
+  - key: human_approval
+    label: Human approval
+    marker: "H"
+    summary: A named person approves this instance before it takes effect.
+  - key: forbidden
+    label: Forbidden
+    marker: "✗"
+    summary: Refused by design. An attempt is recorded and is itself a finding.
+
+groups:
+  - key: read
+    label: Reading
+    summary: Actions that observe. They leak, they do not change.
+  - key: produce
+    label: Producing
+    summary: Actions that create something a human still has to act on.
+  - key: write_internal
+    label: Writing inside the boundary
+    summary: Actions that change state the organisation controls.
+  - key: external
+    label: Acting on the outside world
+    summary: Actions a third party observes. Rarely reversible by us alone.
+  - key: self
+    label: Acting on itself
+    summary: Actions that change the agent's own scope, tools or oversight.
+
+actions:
+  # --- Reading ---------------------------------------------------------------
+  - id: search-internal-knowledge
+    group: read
+    action: Search the internal knowledge base
+    authority: automatic
+    evidence: Query log with identity, query, retrieved document ids, timestamp
+    rationale: >-
+      Reading within an identity-scoped index is the base case. It is automatic only while the
+      authorisation check runs before retrieval, not after — filtering after the fact is a
+      compensation, not a control.
+
+  - id: read-personal-data
+    group: read
+    action: Retrieve records containing personal data
+    authority: automatic
+    escalates_at: C3
+    evidence: Query log plus the data categories touched, retained per the deletion concept
+    rationale: >-
+      Reading is not harmless once the data is personal. From C3 the data_sensitivity dimension
+      is what put the agent in that band, so the same reasoning applies to the read itself.
+
+  - id: read-secrets
+    group: read
+    action: Read credentials, keys or secrets
+    authority: forbidden
+    evidence: Policy event naming the attempted secret and the calling step
+    rationale: >-
+      An agent that can read a secret can exfiltrate it, and no downstream control recovers from
+      that. Secrets reach tools through the runtime, never through the model's context.
+
+  # --- Producing -------------------------------------------------------------
+  - id: draft-document
+    group: produce
+    action: Draft a document, message or summary for a human
+    authority: automatic
+    evidence: Draft stored with model, prompt hash and output hash
+    rationale: >-
+      A draft has no effect until a person acts on it. The evidence is kept anyway, because the
+      question later is not whether it was sent but what was proposed.
+
+  - id: classify-record
+    group: produce
+    action: Classify or tag a record without changing it
+    authority: automatic
+    escalates_at: C4
+    evidence: Decision log with input reference, label, confidence
+    rationale: >-
+      Harmless in isolation. At C4 classification usually feeds an automated consequence, and the
+      classification is then the decision.
+
+  # --- Writing inside the boundary -------------------------------------------
+  - id: write-own-workspace
+    group: write_internal
+    action: Write to its own scratch space or working store
+    authority: automatic
+    evidence: Change log for the working store
+    rationale: >-
+      The agent's own workspace is the one place it should be free. Anything it writes there is
+      subject to the same review as anything else it produces.
+
+  - id: modify-master-data
+    group: write_internal
+    action: Modify customer, contract or master data
+    authority: human_approval
+    evidence: Change record with before/after values, approver identity and timestamp
+    rationale: >-
+      Master data is what other systems trust. A wrong value propagates silently and is found
+      weeks later by someone who cannot tell where it came from.
+
+  - id: delete-records
+    group: write_internal
+    action: Delete records
+    authority: forbidden
+    evidence: Policy event naming the target and the calling step
+    rationale: >-
+      Deletion is the one action whose evidence deletion destroys. Retention and erasure run
+      through the deletion concept, on a schedule, with a proof — never through an agent decision.
+
+  - id: change-permissions
+    group: write_internal
+    action: Grant, change or revoke access rights
+    authority: forbidden
+    evidence: Policy event naming the principal and the right requested
+    rationale: >-
+      An agent that can widen its own reach has no boundary. This stays with the joiner-mover-
+      leaver process regardless of control level.
+
+  # --- Acting on the outside world -------------------------------------------
+  - id: send-external-message
+    group: external
+    action: Send an email or message outside the organisation
+    authority: human_approval
+    evidence: Approval record linking approver, recipient, content hash and send timestamp
+    rationale: >-
+      The first action in this matrix a third party observes. Recall is not a control; the
+      recipient has already read it.
+
+  - id: initiate-payment
+    group: external
+    action: Initiate a payment or place a binding order
+    authority: forbidden
+    evidence: Policy event naming the amount, counterparty and calling step
+    rationale: >-
+      Moving money is the rubric's own categorical override: action_space at its maximum forces
+      C4 regardless of the total. Forbidden here rather than escalated, because an approval
+      workflow around a payment agent is a payment agent.
+
+  - id: publish-content
+    group: external
+    action: Publish content to a public channel
+    authority: human_approval
+    evidence: Approval record with the exact published artifact and its hash
+    rationale: >-
+      Publication is irreversible in the only sense that matters: it has been seen. The evidence
+      must be the artifact itself, not a description of it.
+
+  - id: call-third-party-api
+    group: external
+    action: Call an external API with organisational data
+    authority: automatic
+    escalates_at: C3
+    evidence: Call log with endpoint, data categories transmitted, provider and region
+    rationale: >-
+      Routine for read-only enrichment, and a third-party transfer once the data is personal or
+      confidential. The evidence must name the region, because the contractual question is asked
+      about where processing happened, not about which library was called.
+
+  # --- Acting on itself ------------------------------------------------------
+  - id: invoke-subagent
+    group: self
+    action: Delegate a step to another agent
+    authority: automatic
+    escalates_at: C3
+    evidence: Trail entry naming the delegating step, the delegate and the inherited scope
+    rationale: >-
+      Delegation is where an action space quietly widens: the child must not exceed the parent.
+      From C3 the chain has to be visible to a reviewer, not merely present in a log.
+
+  - id: modify-own-scope
+    group: self
+    action: Change its own action space, tools or policy
+    authority: forbidden
+    evidence: Policy event naming the attempted change
+    rationale: >-
+      The boundary cannot be inside the thing it bounds. Scope changes are a deployment, reviewed
+      as one.
+
+  - id: disable-oversight
+    group: self
+    action: Disable logging, the audit trail or the human gate
+    authority: forbidden
+    evidence: Policy event; absence of trail entries is itself the alarm
+    rationale: >-
+      The only action whose success would hide every other action. This is why the gate is
+      evaluated outside the agent's reach and the trail is tamper-evident rather than merely
+      append-only.

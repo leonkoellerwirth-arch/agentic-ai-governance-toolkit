@@ -19,6 +19,8 @@ from rich.console import Console
 from rich.table import Table
 
 from . import __version__
+from .action_authority import check_matrix
+from .action_authority import update_docs as update_authority_docs
 from .llm_judge import JudgeUnavailable, judge_output
 from .log_analyzer import analyze_log_file
 from .policy import check_coverage
@@ -104,11 +106,16 @@ def readiness(input_path: Path, as_json: bool) -> None:
 @click.option("--check", is_flag=True, help="Exit non-zero if docs are stale; write nothing.")
 def render_docs(check: bool) -> None:
     """Regenerate the generated doc blocks from rubric.yaml and regulatory_sources.yaml."""
+    if boundary := check_matrix():
+        raise click.ClickException(
+            "the action authority matrix does not hold up:\n  " + "\n  ".join(boundary)
+        )
     changed = (
         update_docs(write=not check)
         + update_regulatory_docs(write=not check)
         + update_policy_docs(write=not check)
         + update_readiness_docs(write=not check)
+        + update_authority_docs(write=not check)
     )
     unpinned = check_references()
     if unpinned:
@@ -128,7 +135,7 @@ def render_docs(check: bool) -> None:
             )
         console.print(
             "docs are consistent with rubric.yaml, readiness.yaml, regulatory_sources.yaml, "
-            "and policy_decisions.yaml"
+            "policy_decisions.yaml, and action_authority.yaml"
         )
     else:
         console.print(f"rewrote: {', '.join(changed)}" if changed else "docs already up to date")

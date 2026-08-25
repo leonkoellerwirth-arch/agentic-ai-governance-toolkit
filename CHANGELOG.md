@@ -8,6 +8,32 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Action authority matrix**
+  ([`action_authority.yaml`](evaluator/src/agent_evaluator/action_authority.yaml), rendered to
+  [`docs/03-checklists/action-authority-matrix.md`](docs/03-checklists/action-authority-matrix.md)):
+  sixteen actions in five groups, each either automatic, gated on a named person, or refused by
+  design. The rubric says how much control an agent needs; this says what it is allowed to do,
+  which is the question a reviewer asks immediately afterwards and no rubric answers.
+
+  **`escalates_at` is the load-bearing idea.** Few actions are categorically safe or categorically
+  forbidden; most are safe until the blast radius grows. Reading personal data is automatic below
+  C3 and gated from there up. The levels are checked against `rubric.yaml`, so an escalation to a
+  band that does not exist fails the build rather than reading as a stricter rule than it is —
+  the same cross-file invariant the readiness rubric already relies on.
+
+  **Every row names an evidence artifact, including the forbidden ones.** A refusal that leaves no
+  trace cannot be audited, and an attempt at a forbidden action is a finding in its own right.
+  Validation also fails a matrix in which nothing is forbidden at all: one where everything passes
+  given enough approval is not a boundary.
+
+  Three rows are deliberately arguable and say so in the document — payments forbidden rather than
+  escalated, deletion forbidden at every level, reading personal data escalating rather than being
+  free or refused. A matrix adopted unchanged has not been thought about; the disagreements are
+  the useful part.
+
+  It enforces nothing, and the document leads with that. The enforcing half is a pre-action check
+  in the runtime, for which `local-agent-pipeline` is the reference implementation.
+
 - **Verification log** ([`VERIFICATION.md`](VERIFICATION.md)): what has been checked in
   `regulatory_sources.yaml`, by what means, and what a person still has to do before
   `owner_verified` can move. The gap between "recorded and pinned" and "read back against the
