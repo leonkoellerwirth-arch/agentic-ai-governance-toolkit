@@ -29,7 +29,7 @@ Tragen Sie in **Status** ein: ✓ (erledigt), ✗ (offen) oder n/z. Vermerken Si
 | 1.1 | Der Agent wurde gegen die **verbotenen Praktiken** geprüft und fällt nicht darunter (KI-VO, Art. 5 — prüfen). | Triage-Notiz | Risiko (2nd Line) | ☐ |
 | 1.2 | Die **Risikoklasse** des Agenten wurde bestimmt (hochriskant nach Art. 6 / Anhang III, Transparenzrisiko oder minimal), mit Begründung. | Klassifizierung | Risiko (2nd Line) | ☐ |
 | 1.3 | Ihre **Rolle** in der Wertschöpfungskette (Anbieter / Betreiber / Händler) ist bestimmt, da sich die Pflichten je Rolle unterscheiden. | Klassifizierung | Risiko (2nd Line) | ☐ |
-| 1.4 | Baut der Agent auf einem **KI-Modell mit allgemeinem Verwendungszweck** auf, sind die zugehörigen Pflichten berücksichtigt (Art. 51–55 — prüfen). | Modell-Inventar | KI-Team | ☐ |
+| 1.4 | Baut der Agent auf einem **KI-Modell mit allgemeinem Verwendungszweck** auf, sind dessen Einstufung, die Anbieterpflichten und — bei Anbietern außerhalb der EU — der Bevollmächtigte berücksichtigt (Art. 51–55 — prüfen). | Modell-Inventar mit Einstufung und Bevollmächtigtem | KI-Team | ☐ |
 
 ## 2. Transparenz
 
@@ -37,7 +37,7 @@ Tragen Sie in **Status** ein: ✓ (erledigt), ✗ (offen) oder n/z. Vermerken Si
 |:-:|-----------|----------|----------------|:------:|
 | 2.1 | Personen, die **mit dem Agenten interagieren**, werden — soweit erforderlich — darüber informiert, dass es sich um eine KI handelt (Transparenzpflichten, Art. 50 — prüfen). | UX-Text / Hinweis | KI-Team | ☐ |
 | 2.2 | **KI-erzeugte oder manipulierte Inhalte** des Agenten werden, soweit erforderlich, gekennzeichnet. | Ausgabe-Kennzeichnung | KI-Team | ☐ |
-| 2.3 | Betreiber erhalten die **Informationen und Anweisungen**, die sie für den korrekten Einsatz brauchen (Art. 13 bei Hochrisiko — prüfen). | Betriebsanleitung | Anbieter | ☐ |
+| 2.3 | Der Betrieb des Agenten ist **so transparent, dass Betreiber seine Ausgabe einordnen können**, und sie erhalten die Informationen und Anweisungen für den korrekten Einsatz (Art. 13 bei Hochrisiko — prüfen). | Betriebsanleitung samt dem, was dem Betreiber über Grenzen gesagt wird | Anbieter | ☐ |
 
 ## 3. Menschliche Aufsicht
 

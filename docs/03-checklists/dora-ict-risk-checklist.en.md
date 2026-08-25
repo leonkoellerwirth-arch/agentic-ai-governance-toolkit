@@ -58,8 +58,8 @@ Fill the **Status** column with ✓ (done), ✗ (open), or n/a.
 | # | Criterion | Evidence | Responsible | Status |
 |:-:|-----------|----------|-------------|:------:|
 | 5.1 | An **incident management process** covers agent incidents — detection, handling, escalation (Art. 17 — verify). | Incident process | IT operations | ☐ |
-| 5.2 | Agent incidents are **classified** against your criteria for major ICT-related incidents (Art. 18 — verify). | Classification record | Risk (2nd line) | ☐ |
-| 5.3 | **Reporting paths** for major incidents are known and rehearsed (Art. 19 — verify). | Escalation / reporting plan | Risk (2nd line) | ☐ |
+| 5.2 | Agent incidents **and cyber threats** are classified against your criteria for major ICT-related incidents (Art. 18 — verify). | Classification record covering both | Risk (2nd line) | ☐ |
+| 5.3 | **Reporting paths** for major incidents are known and rehearsed, and the decision on **voluntary notification of a significant cyber threat** has an owner (Art. 19 — verify). | Escalation / reporting plan, naming who decides on voluntary notification | Risk (2nd line) | ☐ |
 
 ---
 

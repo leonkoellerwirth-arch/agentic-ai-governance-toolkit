@@ -63,6 +63,22 @@ words *General principles*, which say nothing without the section they open. Any
 fails the build, so the exception list is where a wrong label would otherwise hide — and a test
 fails if a declared exception is no longer needed.
 
+### Four checklist rows inherited the same narrowing
+
+Correcting a label does not correct what was written under it. Four rows had been drafted to the
+old, narrower topic and were widened to the article they cite:
+
+| Row | Was missing |
+|---|---|
+| AI Act 2.3 | The article requires the system be transparent enough for a deployer to interpret its output. The row asked only for instructions. |
+| AI Act 1.4 | Classification of the model and, for a non-EU provider, the authorised representative — neither is an "obligation on providers", which is all the row asked for. |
+| DORA 5.2 | Cyber threats. The row classified incidents only. |
+| DORA 5.3 | The voluntary notification of a significant cyber threat, and who decides on it. |
+
+This is the part of a label correction that is easy to skip: the register is the citation, the rows
+are what someone actually works through, and a row narrower than its article quietly narrows the
+review that uses it.
+
 ### What the flag now means
 
 `owner_verified: true` here means: every cited heading was checked against the primary text from

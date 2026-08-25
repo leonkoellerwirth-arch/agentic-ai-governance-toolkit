@@ -28,7 +28,7 @@ Fill the **Status** column with ✓ (done), ✗ (open), or n/a. Record where the
 | 1.1 | The agent has been checked against the **prohibited practices** and is not one of them (EU AI Act, Art. 5 — verify). | Triage note | Risk (2nd line) | ☐ |
 | 1.2 | The agent's **risk category** has been determined (high-risk per Art. 6 / Annex III, transparency-risk, or minimal), with reasoning. | Classification record | Risk (2nd line) | ☐ |
 | 1.3 | Your **role** in the value chain (provider / deployer / distributor) is identified, because obligations differ by role. | Classification record | Risk (2nd line) | ☐ |
-| 1.4 | If the agent builds on a **general-purpose AI model**, the associated obligations are considered (Art. 51–55 — verify). | Model inventory | AI team | ☐ |
+| 1.4 | If the agent builds on a **general-purpose AI model**, its classification, the provider's obligations and — for a non-EU provider — the authorised representative are considered (Art. 51–55 — verify). | Model inventory, with the provider's classification and representative | AI team | ☐ |
 
 ## 2. Transparency
 
@@ -36,7 +36,7 @@ Fill the **Status** column with ✓ (done), ✗ (open), or n/a. Record where the
 |:-:|-----------|----------|-------------|:------:|
 | 2.1 | People who **interact with the agent** are informed they are dealing with an AI, where required (transparency obligations, Art. 50 — verify). | UX copy / disclosure | AI team | ☐ |
 | 2.2 | **AI-generated or manipulated content** the agent produces is marked/disclosed where required. | Output labelling | AI team | ☐ |
-| 2.3 | Deployers receive the **information and instructions** they need to use the agent correctly (Art. 13 for high-risk — verify). | Instructions for use | Provider | ☐ |
+| 2.3 | The agent's operation is **transparent enough for deployers to interpret its output**, and they receive the information and instructions they need to use it correctly (Art. 13 for high-risk — verify). | Instructions for use, plus what the deployer is told about limitations | Provider | ☐ |
 
 ## 3. Human oversight
 

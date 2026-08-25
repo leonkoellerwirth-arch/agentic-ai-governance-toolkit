@@ -76,6 +76,15 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **Four checklist rows were widened to the articles they cite.** Correcting a label does not
+  correct what was written under it: rows drafted to the old, narrower topics had inherited the
+  same narrowing. The AI Act row on Article 13 asked only for instructions where the article
+  requires the system be transparent enough for a deployer to interpret its output; the row on
+  Articles 51–55 asked for provider obligations and not for the model's classification or, for a
+  non-EU provider, the authorised representative. DORA's row 5.2 classified incidents but not
+  cyber threats, and 5.3 knew the reporting paths but not who decides on a voluntary notification
+  of a significant cyber threat. Both languages.
+
 - **`owner_verified` is true, and it means something checkable.** Every cited article heading was
   compared against the primary text — not against a rendering of it — retrieved from the
   **Publications Office Cellar repository** with `Accept: application/xhtml+xml` and

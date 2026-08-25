@@ -58,8 +58,8 @@ Tragen Sie in **Status** ein: ✓ (erledigt), ✗ (offen) oder n/z.
 | # | Kriterium | Nachweis | Verantwortlich | Status |
 |:-:|-----------|----------|----------------|:------:|
 | 5.1 | Ein **Vorfallmanagement-Prozess** deckt Agenten-Vorfälle ab — Erkennung, Behandlung, Eskalation (Art. 17 — prüfen). | Vorfallprozess | IT-Betrieb | ☐ |
-| 5.2 | Agenten-Vorfälle werden gegen Ihre Kriterien für **schwerwiegende IKT-Vorfälle klassifiziert** (Art. 18 — prüfen). | Klassifizierungsnachweis | Risiko (2nd Line) | ☐ |
-| 5.3 | **Meldewege** für schwerwiegende Vorfälle sind bekannt und geübt (Art. 19 — prüfen). | Eskalations-/Meldeplan | Risiko (2nd Line) | ☐ |
+| 5.2 | Agenten-Vorfälle **und Cyberbedrohungen** werden gegen Ihre Kriterien für schwerwiegende IKT-Vorfälle klassifiziert (Art. 18 — prüfen). | Klassifizierungsnachweis für beides | Risiko (2nd Line) | ☐ |
+| 5.3 | **Meldewege** für schwerwiegende Vorfälle sind bekannt und geübt, und die Entscheidung über die **freiwillige Meldung einer erheblichen Cyberbedrohung** hat einen Verantwortlichen (Art. 19 — prüfen). | Eskalations-/Meldeplan mit benanntem Entscheider für die freiwillige Meldung | Risiko (2nd Line) | ☐ |
 
 ---
 
