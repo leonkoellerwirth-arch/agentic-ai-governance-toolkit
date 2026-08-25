@@ -8,6 +8,27 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **[`OVERVIEW.md`](OVERVIEW.md)** — the entry document the portfolio did not have. Four
+  repositories, one job, on one page: the problem, who has it, what you actually get, and what
+  this deliberately is not.
+
+  It also settles a positioning question that had been left open. This is a **decision support
+  system, not a decision engine**: it structures the decision and produces the evidence for it,
+  and does not make it. That is not modesty — a tool that answered "high-risk or not" would be
+  promising exactly what `docs/00-scope/regulatory-scope.md` explains cannot be promised, and a
+  reader who noticed the contradiction would be right to stop trusting the rest.
+
+- **[What this does not build, and what does](docs/00-scope/what-this-does-not-build.md)** — the
+  non-goals, with the products that cover them instead: agent identity and inventory (Microsoft
+  Entra Agent ID / Agent 365), policy packs for the EU AI Act, NIST AI RMF, ISO 42001, SOC 2 and
+  NYC Local Law 144 (Credo AI, resold by IBM), inline filtering (AWS, Google), fairness assessment
+  (Holistic AI, Fairly AI), drift monitoring (IBM).
+
+  The remaining gap is narrow and named: DORA, MaRisk and the GDPR at control level, with audit
+  procedures in the language an internal-audit function writes in — plus a documented refusal and
+  runtime enforcement short enough to read. Claims about other products are dated and sourced, and
+  the file says which of them rests on public material rather than on certainty.
+
 - **Action authority matrix**
   ([`action_authority.yaml`](evaluator/src/agent_evaluator/action_authority.yaml), rendered to
   [`docs/03-checklists/action-authority-matrix.md`](docs/03-checklists/action-authority-matrix.md)):

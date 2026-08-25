@@ -131,7 +131,9 @@ Nothing is installed on your side and the rubric is not copied — it travels wi
 
 | Area | Artifact |
 |------|----------|
+| **Start here** | [The whole thing, on one page](OVERVIEW.md) — the problem, the artifacts, and what this deliberately is not |
 | **Scope** | [What this maps, and what it does not](docs/00-scope/regulatory-scope.md) — read before the checklists · [verification log](VERIFICATION.md) |
+| **Boundary of scope** | [What this does not build, and what does](docs/00-scope/what-this-does-not-build.md) — where the platforms are better, and the narrow gap that is left |
 | **Lifecycle** | [Seven-phase lifecycle](docs/01-agent-lifecycle/lifecycle-overview.md) with [Mermaid diagrams](docs/01-agent-lifecycle/diagrams/) (swimlanes, triage flow, escalation paths) |
 | **Risk** | [Risk model](docs/02-risk-assessment/agent-risk-model.md) · [scoring rubric](docs/02-risk-assessment/scoring-rubric.md) · [policy decisions](docs/02-risk-assessment/policy-decisions.md) · [worked examples](docs/02-risk-assessment/examples/) (C1, C3, C4-by-override) |
 | **Checklists** | EU AI Act ([EN](docs/03-checklists/eu-ai-act-agent-checklist.en.md) · [DE](docs/03-checklists/eu-ai-act-agent-checklist.de.md)) · DORA ([EN](docs/03-checklists/dora-ict-risk-checklist.en.md) · [DE](docs/03-checklists/dora-ict-risk-checklist.de.md)) · [go-live readiness](docs/03-checklists/go-live-readiness.md) · [regulatory sources](docs/03-checklists/regulatory-sources.md) |
