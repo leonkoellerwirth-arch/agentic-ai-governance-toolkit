@@ -33,6 +33,7 @@ REGISTER_DOC = "docs/02-risk-assessment/policy-decisions.md"
 # the package — the readiness rubric joins this map when it lands, and cannot land without its
 # decisions, because its targets become required the moment the file exists.
 RUBRIC_FILES: tuple[str, ...] = ("rubric.yaml", "readiness.yaml")
+AUTHORITY_FILE = "action_authority.yaml"
 
 
 @dataclass(frozen=True)
@@ -105,6 +106,15 @@ def required_targets() -> list[str]:
             section, _, field = key.partition(".")
             if field in (data.get(section) or {}):
                 required.append(f"{name}#{key}")
+
+    # The action authority matrix sets judgements too — which actions are refused outright, and
+    # on what an authority may depend. Leaving those out of the register would make them personal
+    # preference wearing governance vocabulary, which is the one thing this file exists against.
+    authority = files("agent_evaluator") / AUTHORITY_FILE
+    if authority.is_file():
+        required.append(f"{AUTHORITY_FILE}#authorities")
+        required.append(f"{AUTHORITY_FILE}#forbidden_criterion")
+        required.append(f"{AUTHORITY_FILE}#conditions")
     return required
 
 

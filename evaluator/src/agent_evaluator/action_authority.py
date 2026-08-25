@@ -5,9 +5,24 @@ asks immediately afterwards and no rubric answers — what is it actually allowe
 is declared in ``action_authority.yaml`` and rendered into the checklist; nothing here enforces
 anything, and saying so is the point. It is the boundary an implementation is measured against.
 
-The load-bearing rule is ``escalates_at``: an action that is automatic below a band and needs a
-human from that band up. The band names are checked against ``rubric.yaml``, so an escalation to
-a level that does not exist fails rather than reading as a stricter rule than it is.
+Authority depends on the action's own context, never on the agent's control band. An earlier
+version escalated at a band — "automatic below C3" — which was wrong: the band is the sum of six
+dimensions, so personal data can score C1 and C3 can arise with no personal data at all. The
+conditional fields replaced it:
+
+``automatic_requires``  preconditions that must all hold for an automatic action; any that fails
+                        escalates the instance.
+``escalates_when``      contexts in which an automatic action needs a person.
+``automatic_if``        the narrow carve-out under which an action that normally needs approval
+                        may run unattended.
+``forbidden_when``      contexts in which an action that normally needs approval is refused.
+``needs_competent_function_when``
+                        contexts where any named approver is not enough and the responsible
+                        function must approve — a regulatory disclosure is not signed off by
+                        whoever happens to be available.
+
+An automatic action with no preconditions at all fails validation. Blanket permission is the
+failure this file exists to make visible, so it may not be expressed silently.
 """
 
 from __future__ import annotations
@@ -19,16 +34,32 @@ from typing import Any
 
 import yaml
 
-from .rubric import _apply, load_rubric, repo_root
+from .rubric import _apply, repo_root
 
 MATRIX_PATH = Path(__file__).with_name("action_authority.yaml")
 DOC = "docs/03-checklists/action-authority-matrix.md"
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")
 
+CONDITION_FIELDS = (
+    "automatic_requires",
+    "escalates_when",
+    "automatic_if",
+    "forbidden_when",
+    "needs_competent_function_when",
+)
+# Which conditional fields make sense for which baseline. A forbidden action takes none: a
+# condition on a refusal is an approval with extra steps.
+ALLOWED_CONDITIONS: dict[str, tuple[str, ...]] = {
+    "automatic": ("automatic_requires", "escalates_when"),
+    "human_approval": ("automatic_if", "forbidden_when", "needs_competent_function_when"),
+    "forbidden": (),
+}
+
 
 @dataclass(frozen=True)
 class Matrix:
     title: str
+    forbidden_criterion: str
     authorities: list[dict[str, Any]]
     groups: list[dict[str, Any]]
     actions: list[dict[str, Any]]
@@ -38,6 +69,7 @@ def load_matrix(path: Path | None = None) -> Matrix:
     raw = yaml.safe_load((path or MATRIX_PATH).read_text(encoding="utf-8"))
     return Matrix(
         title=raw["title"],
+        forbidden_criterion=raw.get("forbidden_criterion", ""),
         authorities=raw["authorities"],
         groups=raw["groups"],
         actions=raw["actions"],
@@ -51,7 +83,9 @@ def check_matrix(matrix: Matrix | None = None) -> list[str]:
 
     authority_keys = {a["key"] for a in matrix.authorities}
     group_keys = {g["key"] for g in matrix.groups}
-    band_levels = {band.level for band in load_rubric().bands}
+
+    if not str(matrix.forbidden_criterion).strip():
+        problems.append("forbidden_criterion is missing — without it, 'forbidden' is a preference")
 
     seen: set[str] = set()
     used_groups: set[str] = set()
@@ -76,18 +110,19 @@ def check_matrix(matrix: Matrix | None = None) -> list[str]:
             if not action.get(field):
                 problems.append(f"{aid}: {field} is missing")
 
-        escalates = action.get("escalates_at")
-        if escalates is not None:
-            if authority != "automatic":
+        allowed = ALLOWED_CONDITIONS.get(authority, ())
+        for field in CONDITION_FIELDS:
+            if action.get(field) and field not in allowed:
                 problems.append(
-                    f"{aid}: escalates_at only applies to an automatic action — "
-                    f"'{authority}' either already needs a human or is refused outright"
+                    f"{aid}: {field} does not apply to a '{authority}' action — "
+                    f"only {allowed or 'no conditions'} do"
                 )
-            if escalates not in band_levels:
-                problems.append(
-                    f"{aid}: escalates_at '{escalates}' is not a band in rubric.yaml "
-                    f"({sorted(band_levels)})"
-                )
+
+        if authority == "automatic" and not action.get("automatic_requires"):
+            problems.append(
+                f"{aid}: an automatic action needs at least one precondition — "
+                "blanket permission is the failure this matrix exists to make visible"
+            )
 
     for group in group_keys - used_groups:
         problems.append(f"group '{group}' is declared but has no actions")
@@ -105,8 +140,10 @@ def _authority_cell(action: dict[str, Any], authorities: list[dict[str, Any]], k
     marker = {a["key"]: a["marker"] for a in authorities}
     if action["authority"] != key:
         return "–"
-    if key == "automatic" and action.get("escalates_at"):
-        return f"{marker[key]} *< {action['escalates_at']}*"
+    if action.get("automatic_requires") or action.get("escalates_when"):
+        return f"{marker[key]}\u2009*"
+    if action.get("automatic_if") or action.get("forbidden_when"):
+        return f"{marker[key]}\u2009*"
     return marker[key]
 
 
@@ -140,14 +177,20 @@ def render_rationales(matrix: Matrix | None = None) -> str:
     lines: list[str] = []
     for action in matrix.actions:
         rationale = " ".join(str(action["rationale"]).split())
-        escalation = (
-            f" Automatic below {action['escalates_at']}, human approval from there up."
-            if action.get("escalates_at")
-            else ""
-        )
-        lines.append(f"- **{action['action']}** — {rationale}{escalation}")
+        lines.append(f"- **{action['action']}** — {rationale}")
+        for field, lead in CONDITION_LEADS:
+            for condition in action.get(field, []) or []:
+                lines.append(f"  - *{lead}* {' '.join(str(condition).split())}")
     return "\n".join(lines)
 
+
+CONDITION_LEADS = (
+    ("automatic_requires", "Automatic only while:"),
+    ("escalates_when", "Needs a person when:"),
+    ("automatic_if", "May run unattended if:"),
+    ("forbidden_when", "Refused when:"),
+    ("needs_competent_function_when", "Needs the responsible function, not any approver, when:"),
+)
 
 _RENDERERS = {
     "authority-matrix": render_matrix,

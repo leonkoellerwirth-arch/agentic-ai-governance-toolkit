@@ -32,6 +32,63 @@ All notable changes to this project are documented here. The format follows
 - **Action authority matrix**
   ([`action_authority.yaml`](evaluator/src/agent_evaluator/action_authority.yaml), rendered to
   [`docs/03-checklists/action-authority-matrix.md`](docs/03-checklists/action-authority-matrix.md)):
+  24 actions in five groups, each automatic, gated on a competent person, or refused by design.
+  The rubric says how much control an agent needs; this says what it is allowed to do.
+
+  **Authority depends on the action's own context, never on the control band.** The first draft
+  escalated at a band — "automatic below C3" — and an independent review took it apart: a band is
+  the sum of six dimensions, so a system full of personal data can score C1 and C3 can arise with
+  none in it at all. Authority now turns on purpose, data class, scope, recipient and whether a
+  prior approval exists. The correction is recorded in `PD-AUTHORITY-CONDITIONS` rather than
+  quietly applied. An automatic action with no stated precondition fails validation: blanket
+  permission is the failure this file exists to make visible.
+
+  **Decision and execution are separate rows.** The same review found the first draft forbidding
+  the compliant path: executing a four-eyes-approved deletion rule is normal and sometimes
+  required, automated revocation on a leaver event is good practice, and payment operations run on
+  exactly the separation of preparation, approval and execution that a blanket refusal denies.
+  Deciding ad hoc to delete stays refused; executing an approved rule does not. Choosing a payee
+  stays refused; initiating an approved payment does not.
+
+  **One criterion decides what is forbidden at all** — approval cannot repair it: the action
+  destroys the evidence of itself, or moves the boundary from inside the boundary. Four rows meet
+  it. Everything else, however severe, is approval with requirements, because a refusal teams
+  route around is worse than a demanding approval they follow.
+
+  **The judgements are registered under INV-6.** `required_targets()` now reads the matrix too, so
+  a new authority model, a changed refusal criterion or a new conditional field without a recorded
+  decision fails `render-docs --check` — the same invariant the rubrics already live under.
+  Unregistered thresholds are personal preference wearing governance vocabulary.
+
+  Five actions the first draft omitted are in: executing code, bulk export, deciding an individual
+  case, changing production logic, and fetching external content. The document also reconciles
+  itself with the scope statement rather than leaving the two side by side: this is a starting
+  policy declared as judgement, not a finding derived from a legal text.
+
+- **[`OVERVIEW.md`](OVERVIEW.md)** — the entry document the portfolio did not have. Four
+  repositories, one job, on one page: the problem, who has it, what you actually get, and what
+  this deliberately is not.
+
+  It also settles a positioning question that had been left open. This is a **decision support
+  system, not a decision engine**: it structures the decision and produces the evidence for it,
+  and does not make it. That is not modesty — a tool that answered "high-risk or not" would be
+  promising exactly what `docs/00-scope/regulatory-scope.md` explains cannot be promised, and a
+  reader who noticed the contradiction would be right to stop trusting the rest.
+
+- **[What this does not build, and what does](docs/00-scope/what-this-does-not-build.md)** — the
+  non-goals, with the products that cover them instead: agent identity and inventory (Microsoft
+  Entra Agent ID / Agent 365), policy packs for the EU AI Act, NIST AI RMF, ISO 42001, SOC 2 and
+  NYC Local Law 144 (Credo AI, resold by IBM), inline filtering (AWS, Google), fairness assessment
+  (Holistic AI, Fairly AI), drift monitoring (IBM).
+
+  The remaining gap is narrow and named: DORA, MaRisk and the GDPR at control level, with audit
+  procedures in the language an internal-audit function writes in — plus a documented refusal and
+  runtime enforcement short enough to read. Claims about other products are dated and sourced, and
+  the file says which of them rests on public material rather than on certainty.
+
+- **Action authority matrix**
+  ([`action_authority.yaml`](evaluator/src/agent_evaluator/action_authority.yaml), rendered to
+  [`docs/03-checklists/action-authority-matrix.md`](docs/03-checklists/action-authority-matrix.md)):
   sixteen actions in five groups, each either automatic, gated on a named person, or refused by
   design. The rubric says how much control an agent needs; this says what it is allowed to do,
   which is the question a reviewer asks immediately afterwards and no rubric answers.

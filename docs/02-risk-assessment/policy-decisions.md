@@ -24,7 +24,7 @@ that no longer exists fails it too.
 ## Coverage
 
 <!-- GENERATED:policy_coverage START — edit policy_decisions.yaml, then run `agent-eval render-docs` -->
-17 thresholds carry a judgement; 17 decisions are recorded.
+20 thresholds carry a judgement; 20 decisions are recorded.
 
 | Threshold | Decision |
 |---|---|
@@ -45,11 +45,65 @@ that no longer exists fails it too.
 | `readiness.yaml#dimensions.currency.required` | PD-R-REQ-CURRENCY |
 | `readiness.yaml#aggregation.per_dimension` | PD-R-AGG-001 |
 | `readiness.yaml#aggregation.exposure` | PD-R-EXPOSURE-001 |
+| `action_authority.yaml#authorities` | PD-AUTHORITY-001 |
+| `action_authority.yaml#forbidden_criterion` | PD-AUTHORITY-FORBIDDEN |
+| `action_authority.yaml#conditions` | PD-AUTHORITY-CONDITIONS |
 <!-- GENERATED:policy_coverage END -->
 
 ## The decisions
 
 <!-- GENERATED:policy_decisions START — edit policy_decisions.yaml, then run `agent-eval render-docs` -->
+### PD-AUTHORITY-001 — Three authorities and no more — automatic, human approval, forbidden.
+
+**Applies to** `action_authority.yaml#authorities` · **status** `project_policy`
+
+**Why**
+
+- A fourth tier ("automatic with notification", "approval by exception") is where these matrices go to die: it becomes the default, and nobody can say afterwards what was actually required.
+- One refinement is kept, on the approval tier only: some publications need the responsible function rather than any named approver, and a matrix that cannot express that would be read as saying a mandatory disclosure may be signed off by whoever is available.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+Real deployments have gradations this cannot express — dual approval, time-boxed automatic, approval only above a threshold. Those have to be written into the preconditions as prose rather than modelled, which makes them harder to check mechanically. That is the price of a matrix a reviewer can hold in their head.
+
+### PD-AUTHORITY-FORBIDDEN — An action is forbidden only when approval cannot repair it — it destroys the evidence of itself, or moves the boundary from inside the boundary. Everything else is approval, however severe.
+
+**Applies to** `action_authority.yaml#forbidden_criterion` · **status** `project_policy`
+
+**Why**
+
+- Without a criterion, "forbidden" is whatever the author found alarming. With one, each refusal can be argued against on its own terms, which is the useful conversation.
+- It is what separates deciding to delete from executing an approved deletion rule, and initiating a payment from choosing its payee. The first of each pair is refused; the second is a working step under approval. An earlier version of this file forbade both halves and was wrong about the compliant path.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+The criterion is narrow enough that genuinely catastrophic but repairable actions — a mass mailing, a large but reversible refund — come out as approval rather than refusal. That is intended and it will feel wrong to some reviewers. The answer is that severity belongs in the approval requirements, not in a refusal that teams route around.
+
+### PD-AUTHORITY-CONDITIONS — Authority depends on the action's own context — purpose, data class, scope, recipient, whether a prior approval exists — and never on the agent's control band.
+
+**Applies to** `action_authority.yaml#conditions` · **status** `project_policy`
+
+**Why**
+
+- The first version of this matrix escalated at a band: "automatic below C3". That was false in both directions. The band is the sum of six dimensions, so a system holding personal data can score C1, and C3 can arise with no personal data in it at all. An independent review found it, and it is recorded here rather than quietly corrected.
+- The band answers how much control an agent needs overall. It was never a statement about any single request, and using it as one was a proxy for the thing that matters.
+
+**Support outside this project**
+
+- None. This is a judgement call, and is recorded as one.
+
+**What it accepts as a cost**
+
+Conditions are prose, so they cannot be evaluated automatically the way a band comparison could. The matrix can check that a condition exists and that it applies to a plausible authority; it cannot check that the condition holds in a running system. A weaker mechanical guarantee in exchange for a claim that is true.
+
 ### PD-DIMENSIONS-001 — Six dimensions, each scored 1–5 against observable anchors.
 
 **Applies to** `rubric.yaml#dimensions` · **status** `project_policy`

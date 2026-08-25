@@ -32,6 +32,72 @@ version: 1
 title: Policy decisions
 
 decisions:
+  - id: PD-AUTHORITY-001
+    target: action_authority.yaml#authorities
+    decision: >-
+      Three authorities and no more — automatic, human approval, forbidden.
+    rationale:
+      - >-
+        A fourth tier ("automatic with notification", "approval by exception") is where these
+        matrices go to die: it becomes the default, and nobody can say afterwards what was
+        actually required.
+      - >-
+        One refinement is kept, on the approval tier only: some publications need the responsible
+        function rather than any named approver, and a matrix that cannot express that would be
+        read as saying a mandatory disclosure may be signed off by whoever is available.
+    external_support: []
+    accepted_cost: >-
+      Real deployments have gradations this cannot express — dual approval, time-boxed
+      automatic, approval only above a threshold. Those have to be written into the
+      preconditions as prose rather than modelled, which makes them harder to check
+      mechanically. That is the price of a matrix a reviewer can hold in their head.
+    status: project_policy
+
+  - id: PD-AUTHORITY-FORBIDDEN
+    target: action_authority.yaml#forbidden_criterion
+    decision: >-
+      An action is forbidden only when approval cannot repair it — it destroys the evidence of
+      itself, or moves the boundary from inside the boundary. Everything else is approval,
+      however severe.
+    rationale:
+      - >-
+        Without a criterion, "forbidden" is whatever the author found alarming. With one, each
+        refusal can be argued against on its own terms, which is the useful conversation.
+      - >-
+        It is what separates deciding to delete from executing an approved deletion rule, and
+        initiating a payment from choosing its payee. The first of each pair is refused; the
+        second is a working step under approval. An earlier version of this file forbade both
+        halves and was wrong about the compliant path.
+    external_support: []
+    accepted_cost: >-
+      The criterion is narrow enough that genuinely catastrophic but repairable actions —
+      a mass mailing, a large but reversible refund — come out as approval rather than
+      refusal. That is intended and it will feel wrong to some reviewers. The answer is that
+      severity belongs in the approval requirements, not in a refusal that teams route around.
+    status: project_policy
+
+  - id: PD-AUTHORITY-CONDITIONS
+    target: action_authority.yaml#conditions
+    decision: >-
+      Authority depends on the action's own context — purpose, data class, scope, recipient,
+      whether a prior approval exists — and never on the agent's control band.
+    rationale:
+      - >-
+        The first version of this matrix escalated at a band: "automatic below C3". That was
+        false in both directions. The band is the sum of six dimensions, so a system holding
+        personal data can score C1, and C3 can arise with no personal data in it at all. An
+        independent review found it, and it is recorded here rather than quietly corrected.
+      - >-
+        The band answers how much control an agent needs overall. It was never a statement
+        about any single request, and using it as one was a proxy for the thing that matters.
+    external_support: []
+    accepted_cost: >-
+      Conditions are prose, so they cannot be evaluated automatically the way a band comparison
+      could. The matrix can check that a condition exists and that it applies to a plausible
+      authority; it cannot check that the condition holds in a running system. A weaker
+      mechanical guarantee in exchange for a claim that is true.
+    status: project_policy
+
   - id: PD-DIMENSIONS-001
     target: rubric.yaml#dimensions
     decision: Six dimensions, each scored 1–5 against observable anchors.

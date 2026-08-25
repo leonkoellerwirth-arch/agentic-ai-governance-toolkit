@@ -1,59 +1,70 @@
 # =============================================================================
-# THE ACTION AUTHORITY MATRIX — what an agent may do on its own, what needs a
-# human, and what is refused outright.
+# THE ACTION AUTHORITY MATRIX — an EXAMPLE POLICY, not a finding.
 #
-# The rubric answers "how much control does this agent need". This file answers
-# the question a reviewer asks next and no rubric answers: "so what is it
-# actually allowed to do?" One row per action, one authority per row, and an
-# evidence artifact for every row including the forbidden ones — a refusal that
-# leaves no trace cannot be audited, and an attempt is itself a finding.
+# The rubric answers how much control an agent needs. This answers the question a
+# reviewer asks next: what is it allowed to do. Every value here is a judgement
+# call, the judgements are registered in policy_decisions.yaml, and a deployment
+# that adopts them unchanged has not done the work.
 #
-# `escalates_at` is the point of the file. Few actions are categorically safe or
-# categorically forbidden; most are safe until the blast radius grows. An action
-# marked automatic with escalates_at C3 is automatic at C1 and C2 and needs a
-# human from C3 up. The band names come from rubric.yaml and are checked against
-# it — an escalation to a band that does not exist fails the gate.
+# WHAT CHANGED AND WHY (2026-08-25, after an independent review):
 #
-# What this file is NOT: a permission system. Nothing here enforces anything.
-# It is the declared boundary an implementation is measured against, and the
-# thing a Principal Architect can disagree with in one reading.
+#   Authority used to escalate at a control band — "automatic below C3". That was
+#   wrong. The band is the SUM of six dimensions, so personal data can score C1
+#   and C3 can arise with no personal data in the system at all. Coupling an
+#   action's authority to that sum is a proxy for the thing that matters and is
+#   false in both directions. Authority now depends on the action's own context:
+#   purpose, data class, scope, recipient, whether a prior approval exists.
+#
+#   Deletion, access revocation and payment used to be forbidden outright. That
+#   confused the DECISION with its EXECUTION. A rule-bound deletion executor for
+#   expired retention is normal and sometimes required; automated revocation on a
+#   leaver event is good practice; payments run on exactly this separation of
+#   preparation, approval and execution. Those rows are now split.
 #
 # Read by:   agent_evaluator.action_authority
 # Rendered:  docs/03-checklists/action-authority-matrix.md
-#            → run `agent-eval render-docs` after editing.
+# Registered: policy_decisions.yaml (PD-AUTHORITY-*)
 # Tested:    evaluator/tests/test_action_authority.py
 # =============================================================================
 
-version: 1
+version: 2
 title: Action authority matrix
 
 authorities:
   - key: automatic
     label: Automatic
     marker: "✓"
-    summary: The agent may perform this without asking, within its declared scope.
+    summary: The agent may do this unattended while every precondition holds.
   - key: human_approval
     label: Human approval
     marker: "H"
-    summary: A named person approves this instance before it takes effect.
+    summary: A competent person approves this instance before it takes effect.
   - key: forbidden
     label: Forbidden
     marker: "✗"
-    summary: Refused by design. An attempt is recorded and is itself a finding.
+    summary: Refused by design. The attempt is recorded and is itself a finding.
+
+# The criterion behind every `forbidden` row. Registered as PD-AUTHORITY-FORBIDDEN.
+# An action is forbidden only when approval cannot repair it: the action would
+# disable the evidence of itself, or would move the boundary from inside it.
+# Everything else is approval, however severe.
+forbidden_criterion: >-
+  Approval cannot repair it — the action destroys the evidence of itself, or changes the
+  boundary from inside the boundary.
 
 groups:
   - key: read
     label: Reading
-    summary: Actions that observe. They leak, they do not change.
+    summary: Actions that observe. They leak; they do not change.
   - key: produce
     label: Producing
-    summary: Actions that create something a human still has to act on.
+    summary: Actions that create something. Harmless only while nothing consumes it automatically.
   - key: write_internal
     label: Writing inside the boundary
     summary: Actions that change state the organisation controls.
   - key: external
     label: Acting on the outside world
-    summary: Actions a third party observes. Rarely reversible by us alone.
+    summary: Actions a third party observes or receives.
   - key: self
     label: Acting on itself
     summary: Actions that change the agent's own scope, tools or oversight.
@@ -64,21 +75,34 @@ actions:
     group: read
     action: Search the internal knowledge base
     authority: automatic
+    automatic_requires:
+      - Authorisation is evaluated before retrieval, not applied to the result afterwards.
+      - Every indexed source is classified and approved for the index.
+    escalates_when:
+      - The query reaches data classes outside the agent's declared purpose.
+      - Retrieval is broad or bulk rather than answering one question.
     evidence: Query log with identity, query, retrieved document ids, timestamp
     rationale: >-
-      Reading within an identity-scoped index is the base case. It is automatic only while the
-      authorisation check runs before retrieval, not after — filtering after the fact is a
-      compensation, not a control.
+      Retrieval within an identity-scoped index is the base case. "Identity-scoped" is a
+      precondition, not a property one may assume: full-text search over an unclassified corpus
+      puts privileged communication and HR material into the model context.
 
   - id: read-personal-data
     group: read
     action: Retrieve records containing personal data
     authority: automatic
-    escalates_at: C3
+    automatic_requires:
+      - The purpose is recorded and the retrieval serves it.
+      - Field-level least privilege applies; unnecessary attributes are not returned.
+    escalates_when:
+      - Special categories of personal data are in scope.
+      - The access is bulk, or the output is an unmasked export.
+      - The purpose is an exception to the routine one.
     evidence: Query log plus the data categories touched, retained per the deletion concept
     rationale: >-
-      Reading is not harmless once the data is personal. From C3 the data_sensitivity dimension
-      is what put the agent in that band, so the same reasoning applies to the read itself.
+      Processing begins at the first retrieval, not at a score. Requiring approval for every
+      routine service lookup is unworkable; requiring it for bulk, special-category and
+      exceptional access is where the risk actually sits.
 
   - id: read-secrets
     group: read
@@ -86,38 +110,61 @@ actions:
     authority: forbidden
     evidence: Policy event naming the attempted secret and the calling step
     rationale: >-
-      An agent that can read a secret can exfiltrate it, and no downstream control recovers from
-      that. Secrets reach tools through the runtime, never through the model's context.
+      An agent that can read a secret can exfiltrate it, and no later approval recovers from
+      that. Secrets reach tools through the runtime, never through the model context.
 
   # --- Producing -------------------------------------------------------------
   - id: draft-document
     group: produce
-    action: Draft a document, message or summary for a human
+    action: Draft a document, message or summary
     authority: automatic
+    automatic_requires:
+      - The draft lands in an isolated draft store.
+      - Nothing consumes it automatically.
+    escalates_when:
+      - The draft becomes a ticket, a customer record, or a knowledge-base entry.
+      - The draft pre-fills a field that another process treats as given.
     evidence: Draft stored with model, prompt hash and output hash
     rationale: >-
-      A draft has no effect until a person acts on it. The evidence is kept anyway, because the
-      question later is not whether it was sent but what was proposed.
+      A draft is harmless while a person stands between it and effect. Once something downstream
+      consumes it, it is that downstream action and must be authorised as one.
 
   - id: classify-record
     group: produce
     action: Classify or tag a record without changing it
     authority: automatic
-    escalates_at: C4
+    automatic_requires:
+      - The label carries no legal, financial or customer-facing consequence.
+    escalates_when:
+      - The label drives a consequential outcome — credit, fraud, AML, HR, prioritisation.
     evidence: Decision log with input reference, label, confidence
     rationale: >-
-      Harmless in isolation. At C4 classification usually feeds an automated consequence, and the
-      classification is then the decision.
+      "Changes nothing" is not "harmless". Where a label is the input to a consequential decision,
+      the label is the decision, and the control belongs on the label.
+
+  - id: decide-case
+    group: produce
+    action: Make or trigger a decision on an individual case
+    authority: human_approval
+    evidence: Decision record with inputs, rule version, outcome, approver and timestamp
+    rationale: >-
+      Credit, fraud, AML, entitlement, HR and prioritisation decisions carry the consequence that
+      classification only points at. This is the row that matters; the label row is upstream of it.
 
   # --- Writing inside the boundary -------------------------------------------
   - id: write-own-workspace
     group: write_internal
-    action: Write to its own scratch space or working store
+    action: Write to its own scratch or working store
     authority: automatic
+    automatic_requires:
+      - The store is isolated, quota-bounded and short-lived.
+      - Declared data classes are excluded, and a deletion rule applies to what remains.
+    escalates_when:
+      - Anything written there is read by another system or another agent.
     evidence: Change log for the working store
     rationale: >-
-      The agent's own workspace is the one place it should be free. Anything it writes there is
-      subject to the same review as anything else it produces.
+      Scratch space is where persistence, exfiltration, poisoning and retention risks accumulate
+      quietly. Free inside the sandbox; not a general write permission.
 
   - id: modify-master-data
     group: write_internal
@@ -128,90 +175,185 @@ actions:
       Master data is what other systems trust. A wrong value propagates silently and is found
       weeks later by someone who cannot tell where it came from.
 
-  - id: delete-records
+  - id: execute-deletion-rule
     group: write_internal
-    action: Delete records
+    action: Execute a pre-approved deletion rule
+    authority: automatic
+    automatic_requires:
+      - The rule was approved in advance under four eyes and is versioned.
+      - A legal-hold check runs immediately before execution.
+      - Execution writes an immutable deletion record naming rule version and scope.
+    escalates_when:
+      - The scope of a run exceeds the approved rule's expected volume.
+    evidence: Deletion record per run — rule version, scope, counts, legal-hold result
+    rationale: >-
+      Expired retention, confirmed erasure requests and de-duplication are executed on a schedule,
+      not decided ad hoc. Forbidding execution outright would forbid the compliant path.
+
+  - id: decide-deletion
+    group: write_internal
+    action: Decide ad hoc that records should be deleted
     authority: forbidden
     evidence: Policy event naming the target and the calling step
     rationale: >-
-      Deletion is the one action whose evidence deletion destroys. Retention and erasure run
-      through the deletion concept, on a schedule, with a proof — never through an agent decision.
+      Deletion is the one action whose success destroys the evidence of itself, which is the
+      criterion for forbidding rather than approving. The decision belongs to the retention
+      process; only its execution is delegable.
 
-  - id: change-permissions
+  - id: revoke-access
     group: write_internal
-    action: Grant, change or revoke access rights
-    authority: forbidden
-    evidence: Policy event naming the principal and the right requested
+    action: Revoke access on a leaver, expiry or compromise event
+    authority: automatic
+    automatic_requires:
+      - The revocation follows a rule determined in advance, from a traceable source event.
+      - A documented break-glass path exists for wrongful revocation.
+    evidence: Entitlement change log with the triggering event and its source system
     rationale: >-
-      An agent that can widen its own reach has no boundary. This stays with the joiner-mover-
-      leaver process regardless of control level.
+      Timely removal of access is a control, not a risk. Requiring a human in this path makes the
+      organisation slower at exactly the moment speed is the control.
+
+  - id: grant-access
+    group: write_internal
+    action: Grant access or raise a privilege
+    authority: human_approval
+    evidence: Entitlement change record with requester, approver, scope and expiry
+    rationale: >-
+      Widening reach is the direction that needs a decision. It stays inside joiner-mover-leaver;
+      the agent may request, never decide.
+
+  - id: change-production-logic
+    group: write_internal
+    action: Change business rules, thresholds, prompts, models or connector configuration in production
+    authority: human_approval
+    evidence: Change record with diff, approver, and the release it went out in
+    rationale: >-
+      Self-modification is covered elsewhere. This is the neighbouring case that is easy to miss:
+      an agent changing somebody else's production logic, which is a deployment and reviewed as one.
+
+  - id: execute-code
+    group: write_internal
+    action: Execute code, shell commands or infrastructure operations
+    authority: human_approval
+    automatic_if:
+      - Execution is confined to a sandbox with no network and no credentials.
+    evidence: Execution log with the exact command, environment and result
+    rationale: >-
+      The highest-leverage action in most real deployments and the one most often left implicit.
+      Inside a sealed sandbox it is a working step; anywhere else it is arbitrary capability.
+
+  - id: export-bulk-data
+    group: write_internal
+    action: Export, download or stage a bulk extract
+    authority: human_approval
+    evidence: Export record with data categories, row counts, destination and approver
+    rationale: >-
+      This is the exfiltration path, and reading rows one at a time is not the same action as
+      taking all of them at once. Volume is the risk; the per-record rows do not cover it.
 
   # --- Acting on the outside world -------------------------------------------
+  - id: send-templated-notification
+    group: external
+    action: Send a pre-approved templated notification
+    authority: automatic
+    automatic_requires:
+      - The template was approved in advance and is versioned.
+      - The recipient comes from the record, not from the model.
+      - No free text is generated into the message.
+    evidence: Send log with template version, recipient reference and timestamp
+    rationale: >-
+      Requiring a human for every transactional confirmation would make the matrix unusable and
+      push teams around it. The control is the template, not the send.
+
   - id: send-external-message
     group: external
-    action: Send an email or message outside the organisation
+    action: Compose and send a message outside the organisation
     authority: human_approval
     evidence: Approval record linking approver, recipient, content hash and send timestamp
     rationale: >-
-      The first action in this matrix a third party observes. Recall is not a control; the
-      recipient has already read it.
+      The first action here a third party observes. Recall is not a control; the recipient has
+      already read it.
 
   - id: initiate-payment
     group: external
     action: Initiate a payment or place a binding order
-    authority: forbidden
-    evidence: Policy event naming the amount, counterparty and calling step
+    authority: human_approval
+    forbidden_when:
+      - The agent selects or alters payee, amount, or the terms of the obligation.
+      - No effective prior approval exists for this specific instance.
+    evidence: Payment record with payee, amount, limit check, four-eyes approval and segregation of duties
     rationale: >-
-      Moving money is the rubric's own categorical override: action_space at its maximum forces
-      C4 regardless of the total. Forbidden here rather than escalated, because an approval
-      workflow around a payment agent is a payment agent.
+      Payment operations already run on separation of preparation, checking, approval and
+      execution; an agent may occupy the preparation and execution slots. What must not happen is
+      the agent choosing the counterparty or the amount.
 
   - id: publish-content
     group: external
     action: Publish content to a public channel
     authority: human_approval
+    needs_competent_function_when:
+      - The publication is a regulatory disclosure or a market communication.
     evidence: Approval record with the exact published artifact and its hash
     rationale: >-
       Publication is irreversible in the only sense that matters: it has been seen. The evidence
-      must be the artifact itself, not a description of it.
+      must be the artifact itself, not a description of it. For a mandatory disclosure "a named
+      person approved it" is not enough — the responsible function has to.
+
+  - id: fetch-external-content
+    group: external
+    action: Fetch and process external content, URLs or attachments
+    authority: human_approval
+    automatic_if:
+      - The source is on an approved allowlist and is fetched into an isolated context.
+    evidence: Fetch log with source, content hash and the context it was admitted to
+    rationale: >-
+      The standard route for prompt injection, server-side request forgery and data egress.
+      Allowlisted and isolated it is routine; open, it is an untrusted instruction channel.
 
   - id: call-third-party-api
     group: external
     action: Call an external API with organisational data
     authority: automatic
-    escalates_at: C3
+    automatic_requires:
+      - The call sits inside a data flow that was approved for this provider, region and purpose.
+    escalates_when:
+      - The provider, the data category, the region or the purpose is new.
     evidence: Call log with endpoint, data categories transmitted, provider and region
     rationale: >-
-      Routine for read-only enrichment, and a third-party transfer once the data is personal or
-      confidential. The evidence must name the region, because the contractual question is asked
-      about where processing happened, not about which library was called.
+      The control point is the approved transfer, not the agent's overall score. The evidence must
+      name the region, because the contractual question is where processing happened.
 
   # --- Acting on itself ------------------------------------------------------
   - id: invoke-subagent
     group: self
     action: Delegate a step to another agent
     authority: automatic
-    escalates_at: C3
+    automatic_requires:
+      - The delegate holds an inherited capability token it cannot widen.
+      - The delegate is in the agent register, with resource and depth limits.
+    escalates_when:
+      - The delegate has external access or a privilege the caller lacks.
     evidence: Trail entry naming the delegating step, the delegate and the inherited scope
     rationale: >-
-      Delegation is where an action space quietly widens: the child must not exceed the parent.
-      From C3 the chain has to be visible to a reviewer, not merely present in a log.
+      Delegation is where an action space quietly widens, and low control levels do not protect
+      against injection or responsibility diffusion. The technical inheritance is the control.
 
   - id: modify-own-scope
     group: self
-    action: Change its own action space, tools or policy
+    action: Change its own action space, tools, prompts, connectors or roles
     authority: forbidden
     evidence: Policy event naming the attempted change
     rationale: >-
-      The boundary cannot be inside the thing it bounds. Scope changes are a deployment, reviewed
-      as one.
+      The boundary cannot be moved from inside the thing it bounds. This covers indirect routes —
+      tool, prompt, connector and role changes — not only an explicit scope edit.
 
   - id: disable-oversight
     group: self
     action: Disable logging, the audit trail or the human gate
     authority: forbidden
-    evidence: Policy event; absence of trail entries is itself the alarm
+    evidence: >-
+      Policy event recorded outside the agent's identity; the absence of expected trail entries is
+      itself the alarm
     rationale: >-
-      The only action whose success would hide every other action. This is why the gate is
-      evaluated outside the agent's reach and the trail is tamper-evident rather than merely
-      append-only.
+      The only action whose success would hide every other action. Whoever can disable logging can
+      usually suppress the policy event too, so the control path must live outside the agent's
+      identity — a recorded event inside it is not sufficient evidence.
