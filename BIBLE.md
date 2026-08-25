@@ -80,6 +80,10 @@ Newest first. Each: date · decision · why · (superseded by …).
   retrofit of what is already published, and the first consumer of the same pattern the readiness
   work will need. It deliberately carries no dates, deadlines, or obligations: recording provenance
   is not legal advice, and stating what an obligation requires would be.
+- **2026-08-25 — Released v0.2.1; do not pin v0.2.0.** The action ignored `fail-on-findings` and
+  aborted on the first finding, because GitHub runs composite steps under `bash -e` and the script
+  never disabled errexit. Caught by the self-test on its first real run. The local harness now uses
+  the runner's exact shell — a harness more forgiving than production tests nothing.
 - **2026-08-25 — Released v0.2.0.** The evaluator's exit codes ship as a composite action
   (`action.yml`), so a consuming repository gates on governance findings without installing the
   toolkit or knowing the CLI, and the rubric travels with the pinned tag instead of being copied.

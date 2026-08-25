@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: leonkoellerwirth-arch/agentic-ai-governance-toolkit@v0.2.0
+      - uses: leonkoellerwirth-arch/agentic-ai-governance-toolkit@v0.2.1
         with:
           readiness: governance/org-readiness.yaml
           assessment: governance/agent.yaml
@@ -90,7 +90,8 @@ jobs:
 ```
 
 Pin a tag, never a branch — the same zero-trust rule this repo applies to third-party actions
-applies to this one. `v0.2.0` is the first release that carries `action.yml`.
+applies to this one. `v0.2.1` is the first release in which the action is known good; `v0.2.0` carries it but
+misreports findings as a hard failure regardless of `fail-on-findings`.
 
 Nothing is installed on your side and the rubric is not copied — it travels with the action, at
 the version you pinned. Set only the inputs you have; each check is skipped when its input is

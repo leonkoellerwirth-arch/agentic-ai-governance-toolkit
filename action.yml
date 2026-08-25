@@ -96,6 +96,10 @@ runs:
         EVIDENCE: ${{ inputs.evidence-path }}
         FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
       run: |
+        # errexit off, deliberately: GitHub runs composite `run:` steps with `bash -e`, which
+        # would kill this script on the first check that reports a finding — before
+        # fail-on-findings is ever consulted. This script inspects exit codes itself.
+        set +e
         set -uo pipefail
         mkdir -p "$EVIDENCE"
         failed=0

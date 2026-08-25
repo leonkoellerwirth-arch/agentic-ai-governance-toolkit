@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-08-25
+
+### Fixed
+
+- **The gate ignored `fail-on-findings` and died on the first finding.** GitHub runs composite
+  `run:` steps under `bash -e`; the script set `-uo pipefail` but never disabled errexit, so the
+  first check that exited non-zero killed it before the flag was consulted — and before the
+  remaining checks ran, so the evidence was incomplete too. `set +e` is now explicit, with the
+  reason in a comment above it.
+
+  Found by `governance-gate-selftest.yml` on the first run after release, which is the entire
+  argument for asserting on the `passed` output rather than on job colour: the job it was
+  supposedly testing had failed, and only the assertion said why. The local test harness now
+  invokes the script the way the runner does (`bash --noprofile --norc -eo pipefail`), because
+  a harness that is more forgiving than production tests nothing.
+
+  `v0.2.0` carries the action but should not be pinned.
+
 ## [0.2.0] — 2026-08-25
 
 ### Added
