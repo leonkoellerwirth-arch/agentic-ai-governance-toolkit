@@ -23,7 +23,7 @@ import time
 import urllib.parse
 import urllib.request
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any, Literal
@@ -34,7 +34,7 @@ from .regulatory import load_sources
 SCHEMA = (
     "https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/legal-status-record"
 )
-SCHEMA_VERSION = "1.1.0"
+SCHEMA_VERSION = "1.2.0"
 
 Status = Literal["current", "superseded", "unchecked"]
 
@@ -47,6 +47,83 @@ NOT_COVERED = (
     "delegated and implementing acts, unless listed here in their own right",
 )
 
+# The finding a reader acts on is a sentence, and a sentence exists in one language. Storing only
+# the English prose would make a German record a translation of output rather than a rendering of
+# a finding, so a finding carries a key and its parameters; the prose is produced from those.
+# LANGUAGES must stay covered — a test fails if a key or a scope item has no German counterpart.
+
+NOTES: dict[str, dict[str, str]] = {
+    "en": {
+        "no_data": (
+            "No consolidation data recorded for this act. Nothing here establishes whether the "
+            "cited text has been amended."
+        ),
+        "unreachable": (
+            "The source could not be reached for this act ({error}). Nothing here establishes "
+            "whether the cited text has been amended."
+        ),
+        "superseded": (
+            "A newer consolidation exists ({newest}). Every citation against {pinned} should be "
+            "re-checked before it is relied on."
+        ),
+        "current": (
+            "No newer consolidation was found in the source at the time of the check. This says "
+            "nothing about amendments not yet consolidated there."
+        ),
+        "base_act": (
+            "The register pins the base act, so nothing here can establish whether it moved."
+        ),
+        "base_act_superseded": (
+            "The register pins the base act while consolidations exist (newest {newest}), so "
+            "nothing here can establish whether the cited text still reads as cited."
+        ),
+    },
+    "de": {
+        "no_data": (
+            "Für diesen Rechtsakt liegen keine Konsolidierungsdaten vor. Nichts hier belegt, ob "
+            "der zitierte Text geändert wurde."
+        ),
+        "unreachable": (
+            "Die Quelle war für diesen Rechtsakt nicht erreichbar ({error}). Nichts hier belegt, "
+            "ob der zitierte Text geändert wurde."
+        ),
+        "superseded": (
+            "Es existiert eine neuere Konsolidierung ({newest}). Jede Fundstelle gegen {pinned} "
+            "ist erneut zu prüfen, bevor man sich darauf stützt."
+        ),
+        "current": (
+            "Zum Zeitpunkt der Prüfung meldete die Quelle keine neuere Konsolidierung. Über "
+            "Änderungen, die dort noch nicht konsolidiert sind, sagt das nichts."
+        ),
+        "base_act": (
+            "Das Register zitiert den Basisrechtsakt; damit lässt sich hier nicht feststellen, ob "
+            "er sich bewegt hat."
+        ),
+        "base_act_superseded": (
+            "Das Register zitiert den Basisrechtsakt, obwohl Konsolidierungen existieren (neueste "
+            "{newest}). Damit lässt sich nicht feststellen, ob der zitierte Text noch so lautet."
+        ),
+    },
+}
+
+NOT_COVERED_DE: dict[str, str] = {
+    "new legal acts not listed here": "neue Rechtsakte, die hier nicht aufgeführt sind",
+    "national law": "nationales Recht",
+    "case law": "Rechtsprechung",
+    "supervisory guidance and interpretations": "Aufsichtsleitlinien und Auslegungen",
+    "technical standards": "technische Normen",
+    "delegated and implementing acts, unless listed here in their own right": (
+        "delegierte Rechtsakte und Durchführungsrechtsakte, sofern sie nicht selbst hier "
+        "aufgeführt sind"
+    ),
+}
+
+LANGUAGES = tuple(NOTES)
+
+
+def note_text(key: str, args: dict[str, Any], lang: str = "en") -> str:
+    return NOTES[lang][key].format(**args)
+
 
 @dataclass(frozen=True)
 class ActStatus:
@@ -58,6 +135,8 @@ class ActStatus:
     status: Status
     note: str
     why: str = ""
+    note_key: str = ""
+    note_args: dict[str, Any] = field(default_factory=dict)
 
 
 def _consolidations() -> dict[str, Any]:
@@ -67,6 +146,21 @@ def _consolidations() -> dict[str, Any]:
     if not resource.is_file():
         return {}
     return json.loads(resource.read_text(encoding="utf-8"))
+
+
+def assess(pinned: str | None, newest: str | None) -> tuple[Status, str, dict[str, Any]]:
+    """What the two version strings permit us to say — the only place that judgement is made.
+
+    Comparing them as strings is sound only because a pin is refused unless it is a consolidation
+    of the act it sits under; see `load_profile`.
+    """
+    if pinned and newest and pinned < newest:
+        return "superseded", "superseded", {"newest": newest, "pinned": pinned}
+    if pinned:
+        return "current", "current", {}
+    if newest:
+        return "unchecked", "base_act_superseded", {"newest": newest}
+    return "unchecked", "base_act", {}
 
 
 def statuses() -> tuple[list[ActStatus], str | None]:
@@ -89,30 +183,26 @@ def statuses() -> tuple[list[ActStatus], str | None]:
                     pinned,
                     None,
                     "unchecked",
-                    "No consolidation data recorded for this act. Nothing here establishes whether "
-                    "the cited text has been amended.",
+                    note_text("no_data", {}),
+                    note_key="no_data",
                 )
             )
             continue
         available = entry.get("available") or []
         newest = available[-1] if available else None
-        if pinned and newest and pinned < newest:
-            note = (
-                f"A newer consolidation exists ({newest}). Every citation against {pinned} should "
-                "be re-checked before it is relied on."
-            )
-            status: Status = "superseded"
-        elif pinned:
-            note = (
-                "No newer consolidation was found in the source at the time of the check. "
-                "This says nothing about amendments not yet consolidated there."
-            )
-            status = "current"
-        else:
-            note = "The register pins the base act, so nothing here can establish whether it moved."
-            status = "unchecked"
+        status, key, args = assess(pinned, newest)
         out.append(
-            ActStatus(framework.key, framework.act, framework.celex, pinned, newest, status, note)
+            ActStatus(
+                framework.key,
+                framework.act,
+                framework.celex,
+                pinned,
+                newest,
+                status,
+                note_text(key, args),
+                note_key=key,
+                note_args=args,
+            )
         )
     return out, checked
 
@@ -128,6 +218,7 @@ def build_record(prepared_for: str = "") -> dict[str, Any]:
         "prepared_for": prepared_for or None,
         "register": None,
         "source": snapshot.get("_source", "not recorded"),
+        "source_id": ENDPOINT,
         "source_checked_on": checked,
         "acts": [
             {
@@ -138,6 +229,8 @@ def build_record(prepared_for: str = "") -> dict[str, Any]:
                 "newest_known_version": e.newest_known,
                 "status": e.status,
                 "note": e.note,
+                "note_key": e.note_key,
+                "note_args": e.note_args,
             }
             for e in entries
         ],
@@ -157,57 +250,153 @@ def build_record(prepared_for: str = "") -> dict[str, Any]:
     }
 
 
-def render_markdown(record: dict[str, Any]) -> str:
+WORDS: dict[str, dict[str, str]] = {
+    "en": {
+        "title": "Legal status record",
+        "prepared": "Prepared on {on}",
+        "prepared_for": " for {who}",
+        "source": "Source: {source}",
+        "source_gloss": "every consolidated version of the listed works",
+        "checked": "Source last checked: {on}",
+        "not_recorded": "not recorded",
+        "register": "Register: {name} ({n} acts, {file}, sha256 {digest}…)",
+        "register_caveat": (
+            "Why each act is in this register is stated by the register holder. This tool checks "
+            "version currency; it does not verify that the selection is complete or correct."
+        ),
+        "table_head": "| | Act | Cited version | Newest known |",
+        "base_act_cell": "— base act —",
+        "unknown": "unknown",
+        "meanings": "## What each entry means",
+        "because": "  - In the register because: {why}",
+        "watched_head": "## What was watched",
+        "watched": "Watched: {watched}.",
+        "not_covered": "Not covered:",
+        "absence": "## What an absence of findings means",
+    },
+    "de": {
+        "title": "Rechtsstandsbeleg",
+        "prepared": "Erstellt am {on}",
+        "prepared_for": " für {who}",
+        "source": "Quelle: {source}",
+        "source_gloss": "jede konsolidierte Fassung der aufgeführten Werke",
+        "checked": "Quelle zuletzt geprüft: {on}",
+        "not_recorded": "nicht erfasst",
+        "register": "Register: {name} ({n} Rechtsakte, {file}, sha256 {digest}…)",
+        "register_caveat": (
+            "Warum ein Rechtsakt in diesem Register steht, ist die Angabe des Registerführers. "
+            "Dieses Werkzeug prüft die Aktualität der Fassung; es prüft nicht, ob die Auswahl "
+            "vollständig oder richtig ist."
+        ),
+        "table_head": "| | Rechtsakt | Zitierte Fassung | Neueste bekannte |",
+        "base_act_cell": "— Basisrechtsakt —",
+        "unknown": "unbekannt",
+        "meanings": "## Was die Einträge bedeuten",
+        "because": "  - Im Register, weil: {why}",
+        "watched_head": "## Was beobachtet wurde",
+        "watched": "Beobachtet: {watched}.",
+        "not_covered": "Nicht erfasst:",
+        "absence": "## Was ein Ausbleiben von Befunden bedeutet",
+    },
+}
+
+SCOPE_DE = {
+    "watched": (
+        "die konsolidierten Fassungen der{count} oben genannten Rechtsakte, und nichts sonst"
+    ),
+    "meaning_of_no_finding": (
+        "Dass die Quelle zum oben erfassten Prüfzeitpunkt keine neuere konsolidierte Fassung der "
+        "genannten Rechtsakte meldete. Es ist keine Aussage darüber, dass sich nichts Relevantes "
+        "geändert hat, und keine Aussage darüber, ob eine Pflicht auf ein System zutrifft."
+    ),
+    "on_source_failure": (
+        "Eine Prüfung, welche die Quelle nicht erreichen konnte, wird als ungeprüft erfasst, nie "
+        "als aktuell."
+    ),
+}
+
+
+def _scope_de(record: dict[str, Any]) -> dict[str, Any]:
+    """The German scope block. Rebuilt from the record, never translated out of the English."""
+    register = record.get("register")
+    count = f" {register['entries']}" if register else ""
+    return {
+        "watched": SCOPE_DE["watched"].format(count=count),
+        "not_covered": [NOT_COVERED_DE[item] for item in record["scope"]["not_covered"]],
+        "meaning_of_no_finding": SCOPE_DE["meaning_of_no_finding"],
+        "on_source_failure": SCOPE_DE["on_source_failure"],
+    }
+
+
+def render_markdown(record: dict[str, Any], lang: str = "en") -> str:
+    """The record as prose. `lang` selects the rendering; the record itself does not change."""
+    if lang not in LANGUAGES:
+        raise ValueError(f"no rendering for {lang!r}; have {', '.join(LANGUAGES)}")
+    w = WORDS[lang]
     mark = {"current": "✓", "superseded": "⚠", "unchecked": "—"}
+    scope = _scope_de(record) if lang == "de" else record["scope"]
+
+    prepared = w["prepared"].format(on=record["prepared_on"])
+    if record["prepared_for"]:
+        prepared += w["prepared_for"].format(who=record["prepared_for"])
     lines = [
-        "# Legal status record",
+        f"# {w['title']}",
         "",
-        f"Prepared on {record['prepared_on']}"
-        + (f" for {record['prepared_for']}" if record["prepared_for"] else "")
-        + ".",
+        prepared + ".",
         "",
-        f"Source: {record['source']}",
-        f"Source last checked: {record['source_checked_on'] or 'not recorded'}",
+        w["source"].format(
+            source=(
+                f"{record['source_id']} — {w['source_gloss']}"
+                if lang != "en" and record.get("source_id")
+                else record["source"]
+            )
+        ),
+        w["checked"].format(on=record["source_checked_on"] or w["not_recorded"]),
         "",
-        "| | Act | Cited version | Newest known | ",
+        w["table_head"],
         "|---|---|---|---|",
     ]
     register = record.get("register")
     if register:
         lines[6:6] = [
-            f"Register: {register['name']} "
-            f"({register['entries']} acts, {register['file']}, sha256 {register['sha256'][:12]}…)",
+            w["register"].format(
+                name=register["name"],
+                n=register["entries"],
+                file=register["file"],
+                digest=register["sha256"][:12],
+            ),
             "",
-            "Why each act is in this register is stated by the register holder. This tool checks "
-            "version currency; it does not verify that the selection is complete or correct.",
+            w["register_caveat"],
         ]
 
     for act in record["acts"]:
         lines.append(
             f"| {mark[act['status']]} | {act['act']} ({act['celex']}) | "
-            f"{act['cited_version'] or '— base act —'} | "
-            f"{act['newest_known_version'] or 'unknown'} |"
+            f"{act['cited_version'] or w['base_act_cell']} | "
+            f"{act['newest_known_version'] or w['unknown']} |"
         )
-    lines += ["", "## What each entry means", ""]
+    lines += ["", w["meanings"], ""]
     for act in record["acts"]:
-        lines.append(f"- **{act['act']}** — {act['note']}")
+        # A record written before findings carried keys still renders — in English, as it was.
+        key = act.get("note_key")
+        note = note_text(key, act.get("note_args") or {}, lang) if key else act["note"]
+        lines.append(f"- **{act['act']}** — {note}")
         if act.get("why"):
-            lines.append(f"  - In the register because: {act['why']}")
+            lines.append(w["because"].format(why=act["why"]))
 
-    scope = record["scope"]
     lines += [
         "",
-        "## What was watched",
+        w["watched_head"],
         "",
-        f"Watched: {scope['watched']}.",
+        w["watched"].format(watched=scope["watched"]),
         "",
-        "Not covered:",
+        w["not_covered"],
         "",
     ]
     lines += [f"- {item}" for item in scope["not_covered"]]
     lines += [
         "",
-        "## What an absence of findings means",
+        w["absence"],
         "",
         scope["meaning_of_no_finding"],
         "",
@@ -356,6 +545,7 @@ def profile_statuses(entries: list[RegisterEntry], resolve: Resolver) -> list[Ac
         try:
             available = resolve(consolidated_base(entry.celex))
         except Exception as error:
+            args = {"error": str(error)}
             out.append(
                 ActStatus(
                     entry.key,
@@ -364,37 +554,27 @@ def profile_statuses(entries: list[RegisterEntry], resolve: Resolver) -> list[Ac
                     entry.pinned,
                     None,
                     "unchecked",
-                    f"The source could not be reached for this act ({error}). Nothing here "
-                    "establishes whether the cited text has been amended.",
+                    note_text("unreachable", args),
                     entry.why,
+                    note_key="unreachable",
+                    note_args=args,
                 )
             )
             continue
         newest = available[-1] if available else None
-        if entry.pinned and newest and entry.pinned < newest:
-            status: Status = "superseded"
-            note = (
-                f"A newer consolidation exists ({newest}). Every citation against {entry.pinned} "
-                "should be re-checked before it is relied on."
-            )
-        elif entry.pinned:
-            status = "current"
-            note = (
-                "No newer consolidation was found in the source at the time of the check. "
-                "This says nothing about amendments not yet consolidated there."
-            )
-        elif newest:
-            status = "unchecked"
-            note = (
-                f"The register pins the base act while consolidations exist (newest {newest}), so "
-                "nothing here can establish whether the cited text still reads as cited."
-            )
-        else:
-            status = "unchecked"
-            note = "The register pins the base act, so nothing here can establish whether it moved."
+        status, key, args = assess(entry.pinned, newest)
         out.append(
             ActStatus(
-                entry.key, entry.act, entry.celex, entry.pinned, newest, status, note, entry.why
+                entry.key,
+                entry.act,
+                entry.celex,
+                entry.pinned,
+                newest,
+                status,
+                note_text(key, args),
+                entry.why,
+                note_key=key,
+                note_args=args,
             )
         )
     return out
@@ -419,6 +599,8 @@ def build_profile_record(
             "newest_known_version": e.newest_known,
             "status": e.status,
             "note": e.note,
+            "note_key": e.note_key,
+            "note_args": e.note_args,
             "why": e.why,
             "why_stated_by": "the register holder; not verified by this tool",
         }

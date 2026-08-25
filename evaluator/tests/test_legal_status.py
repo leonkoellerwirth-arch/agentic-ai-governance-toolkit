@@ -174,7 +174,7 @@ def test_a_supplied_register_is_identified_by_digest(tmp_path):
     )
     assert record["register"]["entries"] == 2
     assert len(record["register"]["sha256"]) == 64
-    assert record["schema_version"] == "1.1.0"
+    assert record["schema_version"] == ls.SCHEMA_VERSION
 
 
 def test_the_scope_still_names_what_was_not_watched(tmp_path):
@@ -184,3 +184,64 @@ def test_the_scope_still_names_what_was_not_watched(tmp_path):
     )
     assert "national law" in record["scope"]["not_covered"]
     assert "2 acts listed above, and nothing else" in record["scope"]["watched"]
+
+
+# --- Rendering in another language -------------------------------------------------------------
+
+
+def test_every_finding_can_be_stated_in_every_language():
+    """A finding that exists only in English cannot be put in front of a German reader."""
+    for lang in ls.LANGUAGES:
+        assert set(ls.NOTES[lang]) == set(ls.NOTES["en"]), f"{lang} is missing a finding"
+
+
+def test_every_excluded_area_can_be_named_in_german():
+    """The scope statement is the part that must not thin out in translation."""
+    assert set(ls.NOT_COVERED) == set(ls.NOT_COVERED_DE)
+
+
+def test_every_scaffolding_phrase_exists_in_every_language():
+    for lang in ls.LANGUAGES:
+        assert set(ls.WORDS[lang]) == set(ls.WORDS["en"]), f"{lang} is missing a phrase"
+
+
+def test_the_judgement_only_produces_findings_that_exist(tmp_path):
+    """assess() is the only place the two versions are compared; its keys must all be renderable."""
+    cases = [
+        (None, None),
+        (None, "02024R1689-20240712"),
+        ("02024R1689-20240712", None),
+        ("02024R1689-20240712", "02024R1689-20260727"),
+        ("02024R1689-20260727", "02024R1689-20260727"),
+    ]
+    for pinned, newest in cases:
+        _, key, args = ls.assess(pinned, newest)
+        assert key in ls.NOTES["en"]
+        for lang in ls.LANGUAGES:
+            ls.note_text(key, args, lang)  # raises on a missing placeholder
+
+
+def test_the_german_record_still_says_what_it_did_not_watch(tmp_path):
+    """Translating away the limits would be the one change that makes the record dishonest."""
+    record = ls.build_profile_record(
+        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
+    )
+    german = ls.render_markdown(record, "de")
+    assert "nationales Recht" in german
+    assert "Rechtsprechung" in german
+    assert "nie als aktuell" in german
+    assert "keine Aussage darüber, dass sich nichts Relevantes geändert hat" in german
+
+
+def test_the_german_record_carries_no_english_scaffolding(tmp_path):
+    record = ls.build_profile_record(
+        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
+    )
+    german = ls.render_markdown(record, "de")
+    for leak in ("Not covered", "What was watched", "Legal status record", "Source last checked"):
+        assert leak not in german, f"{leak!r} survived into the German record"
+
+
+def test_an_unknown_language_is_refused_not_silently_english():
+    with pytest.raises(ValueError, match="no rendering"):
+        ls.render_markdown(ls.build_record(), "fr")

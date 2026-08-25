@@ -76,6 +76,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **The record in German** (`agent-eval legal-status --lang de`): a finding a reader acts on is a
+  sentence, and a sentence exists in one language. Storing only English prose would make a German
+  record a translation of output rather than a rendering of a finding, so a finding now carries a
+  key and its parameters and the prose is produced from those. `assess()` is the single place the
+  two versions are compared, and a test walks every case it can produce to prove each one can be
+  stated in every language.
+
+  The scope statement is the part that must not thin out in translation, so tests assert the German
+  record still names national law, case law and the rest, still says what an absence of findings
+  does not mean, and carries no English scaffolding. An unknown language is refused rather than
+  silently rendered in English. The source description is our sentence and not the source's, so it
+  is rendered per language while the endpoint stays in the record as an identifier.
+
 - **Registers the reader owns** (`agent-eval legal-status --profile <file>`, template in
   `templates/register.example.yaml`): the acts above are the ones this toolkit cites. Anyone
   watching a different body of law keeps their own register, and that register is theirs.

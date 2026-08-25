@@ -22,7 +22,13 @@ from . import __version__
 from .action_authority import check_matrix
 from .action_authority import update_docs as update_authority_docs
 from .evidence import write_manifest
-from .legal_status import ProfileError, build_profile_record, build_record, render_markdown
+from .legal_status import (
+    LANGUAGES,
+    ProfileError,
+    build_profile_record,
+    build_record,
+    render_markdown,
+)
 from .llm_judge import JudgeUnavailable, judge_output
 from .log_analyzer import analyze_log_file
 from .policy import check_coverage
@@ -71,7 +77,13 @@ def manifest(evidence_dir: Path, commit: str) -> None:
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="A register file to check instead of the acts this toolkit itself cites.",
 )
-def legal_status(prepared_for: str, as_json: bool, profile: Path | None) -> None:
+@click.option(
+    "--lang",
+    default="en",
+    type=click.Choice(LANGUAGES),
+    help="Language of the rendered record. The record itself is unchanged.",
+)
+def legal_status(prepared_for: str, as_json: bool, profile: Path | None, lang: str) -> None:
     """State, for every pinned act, whether the cited version is still the newest known."""
     if profile is None:
         record = build_record(prepared_for)
@@ -83,7 +95,7 @@ def legal_status(prepared_for: str, as_json: bool, profile: Path | None) -> None
     if as_json:
         click.echo(json.dumps(record, indent=2, ensure_ascii=False))
     else:
-        click.echo(render_markdown(record))
+        click.echo(render_markdown(record, lang))
     acts = record["acts"]
     if any(a["status"] == "superseded" for a in acts):
         raise SystemExit(1)
