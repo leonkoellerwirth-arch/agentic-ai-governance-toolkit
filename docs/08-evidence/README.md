@@ -1,5 +1,10 @@
 # The evidence format
 
+Two formats are published here: the **evidence manifest** a gate run writes, and the
+**legal-status record** the consolidation check produces. Both carry a `schema` field naming a
+document in this directory, and both have a conformance suite — a published schema nobody checks
+is documentation, not a contract.
+
 A gate run writes one file per check and a `manifest.json` beside them. The manifest is what makes
 the directory archivable rather than merely produced: it names the tool and its version,
 fingerprints the rulesets that decided the outcome, records the commit under test and the time, and
@@ -51,3 +56,31 @@ useful.
   ruleset that was in force, and nothing here archives it.
 - Nothing signs the manifest. Tamper-evidence within a set is not the same as authenticity of its
   origin, and an optional signature over the manifest is the obvious next step.
+
+## The legal-status record
+
+The record answers a different question from the manifest. A manifest says what a run did; the
+record says whether the law a control mapping cites still reads as cited — per act, the version
+pinned, the newest the Publications Office reports, when that was checked, against which source.
+
+The schema is published here:
+[`legal-status-record.schema.json`](legal-status-record.schema.json).
+
+### Why the scope block is required and not optional
+
+A monthly record that reports nothing gets read as "nothing changed". That reading is only
+defensible if the record states what was watched and what was not, so the schema **refuses a record
+without its scope block, and refuses a scope whose `not_covered` list is empty**. A second
+implementation of this format cannot quietly drop the part that makes an empty finding readable —
+if it does, its output is not this format.
+
+For the same reason `status` is closed to three values. `current`, `superseded`, `unchecked`, and
+nothing softer: a check that could not reach the source is `unchecked`, never `current`, and a
+format that admits "probably current" invites exactly the reading the record exists to prevent.
+
+### What an exclusion is, in this format
+
+`excluded` records acts the register holder deliberately left out, with a reason and optionally the
+condition that would bring one back. The schema forbids a `status` on an exclusion, because an
+exclusion is never version-checked — carrying one would say it had been. An exclusion is a decision
+with a date on it, not a finding, and nothing re-checks whether its reason still holds.

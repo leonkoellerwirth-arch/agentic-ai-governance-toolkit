@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/legal-status-record/1.4.0",
+  "title": "Legal status record",
+  "description": "For every act a register pins: the version cited, the newest the source reports, when that was checked, and against which source. The scope block is required and not decorative — a record that cannot say what it did not look at is a promise of completeness nobody can keep, so a consumer that drops it is not reading this format.",
+  "type": "object",
+  "required": [
+    "schema",
+    "schema_version",
+    "prepared_on",
+    "source",
+    "acts",
+    "scope"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/legal-status-record"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "evidence_schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "prepared_on": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "prepared_for": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_checked_on": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Null means the check has no recorded date, which is not the same as today."
+    },
+    "register": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "file",
+            "sha256",
+            "entries"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "entries": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "exclusions": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ],
+      "description": "Which selection the record was made against. Null for the register the tool ships."
+    },
+    "acts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/act"
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exclusion"
+      }
+    },
+    "scope": {
+      "$ref": "#/$defs/scope"
+    }
+  },
+  "$defs": {
+    "act": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "act",
+        "celex",
+        "cited_version",
+        "newest_known_version",
+        "status",
+        "note"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "act": {
+          "type": "string",
+          "minLength": 1
+        },
+        "celex": {
+          "type": "string",
+          "pattern": "^3\\d{4}[A-Z]\\d{4}$"
+        },
+        "cited_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^0\\d{4}[A-Z]\\d{4}-\\d{8}$"
+        },
+        "newest_known_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^0\\d{4}[A-Z]\\d{4}-\\d{8}$"
+        },
+        "status": {
+          "enum": [
+            "current",
+            "superseded",
+            "unchecked"
+          ],
+          "description": "A check that could not reach the source is unchecked, never current."
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note_key": {
+          "enum": [
+            "base_act",
+            "base_act_superseded",
+            "current",
+            "no_data",
+            "pin_unknown",
+            "superseded",
+            "unreachable"
+          ]
+        },
+        "note_args": {
+          "type": "object"
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Why the act is in the register. The register holder's statement."
+        },
+        "why_stated_by": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "act",
+        "why_not"
+      ],
+      "properties": {
+        "act": {
+          "type": "string",
+          "minLength": 1
+        },
+        "celex": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^3\\d{4}[A-Z]\\d{4}$"
+        },
+        "why_not": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revisit_when": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decided_by": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "description": "Deliberately left out. Never version-checked, and its reason is not monitored."
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "watched",
+        "not_covered",
+        "meaning_of_no_finding",
+        "on_source_failure"
+      ],
+      "properties": {
+        "watched": {
+          "type": "string",
+          "minLength": 1
+        },
+        "not_covered": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "What was not watched. Empty would assert a completeness the record cannot have."
+        },
+        "meaning_of_no_finding": {
+          "type": "string",
+          "minLength": 1
+        },
+        "on_source_failure": {
+          "type": "string",
+          "minLength": 1
+        },
+        "on_exclusions": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
