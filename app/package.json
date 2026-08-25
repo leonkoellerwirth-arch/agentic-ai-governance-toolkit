@@ -1,6 +1,6 @@
 {
   "name": "governance-console",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Local, offline-capable governance console — interactive risk assessment over the toolkit's scoring rubric.",
   "type": "module",
   "scripts": {

@@ -114,7 +114,7 @@ artifact; it adds nothing else, and it is not required.
 
 ```yaml
 - uses: actions/checkout@v5
-- uses: leonkoellerwirth-arch/agentic-ai-governance-toolkit@v0.2.1
+- uses: leonkoellerwirth-arch/agentic-ai-governance-toolkit@v0.3.0
   with:
     readiness: governance/org-readiness.yaml
     logs: artifacts/audit-trail.jsonl
@@ -122,8 +122,8 @@ artifact; it adds nothing else, and it is not required.
 ```
 
 Pin a tag, never a branch — the same zero-trust rule this repo applies to third-party actions
-applies to this one. `v0.2.1` is the first release in which the action is known good; `v0.2.0`
-carries it but misreports findings as a hard failure regardless of `fail-on-findings`.
+applies to this one. `v0.3.0` is the first release in which the action wraps the script. `v0.2.0` carries an
+action that misreports findings as a hard failure regardless of `fail-on-findings`; do not pin it.
 
 Nothing is installed on your side and the rubric is not copied — it travels with the pinned tag.
 
