@@ -8,6 +8,19 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Scope statement** ([`docs/00-scope/regulatory-scope.md`](docs/00-scope/regulatory-scope.md)):
+  what this toolkit maps, what it deliberately does not, and why the three repositories answer that
+  differently. Three questions that look alike — what an article requires (mapped), whether it
+  applies to a given system (not mapped), how well an organization meets it (not scored) — with the
+  reasoning for each boundary and where triage sits between the first two.
+
+  This closes a gap that was visible from outside and not from inside: this toolkit maps the EU AI
+  Act, `rag-approval-blueprint` declines to, and `platform-decision-kit` carries no regulatory
+  checklist at all. Each position is sound on its own; read side by side and unexplained, they read
+  as inconsistency. Linked from the README and `DISCLAIMER.md`. The document cites no article
+  numbers of its own and points at the checklists instead, per the rule the reference checker
+  already enforces on prose.
+
 - **Governance gate as a composite action** (`action.yml`): the evaluator's exit codes were already
   a gate — `readiness`, `policy-check` and `log-analyze` each exit non-zero on a finding — but every
   consuming repository had to install the toolkit and know the CLI to use them. It now references

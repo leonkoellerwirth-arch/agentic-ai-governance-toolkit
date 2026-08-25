@@ -113,6 +113,7 @@ schema is a documented integration contract with this evaluator.
 
 | Area | Artifact |
 |------|----------|
+| **Scope** | [What this maps, and what it does not](docs/00-scope/regulatory-scope.md) — read before the checklists |
 | **Lifecycle** | [Seven-phase lifecycle](docs/01-agent-lifecycle/lifecycle-overview.md) with [Mermaid diagrams](docs/01-agent-lifecycle/diagrams/) (swimlanes, triage flow, escalation paths) |
 | **Risk** | [Risk model](docs/02-risk-assessment/agent-risk-model.md) · [scoring rubric](docs/02-risk-assessment/scoring-rubric.md) · [policy decisions](docs/02-risk-assessment/policy-decisions.md) · [worked examples](docs/02-risk-assessment/examples/) (C1, C3, C4-by-override) |
 | **Checklists** | EU AI Act ([EN](docs/03-checklists/eu-ai-act-agent-checklist.en.md) · [DE](docs/03-checklists/eu-ai-act-agent-checklist.de.md)) · DORA ([EN](docs/03-checklists/dora-ict-risk-checklist.en.md) · [DE](docs/03-checklists/dora-ict-risk-checklist.de.md)) · [go-live readiness](docs/03-checklists/go-live-readiness.md) · [regulatory sources](docs/03-checklists/regulatory-sources.md) |
@@ -139,7 +140,10 @@ This is the first public release (v0.1.0). What it deliberately does **not** do:
 
 - **It is not legal advice and not a compliance certification.** Regulatory references (EU AI Act,
   DORA) are indicative pointers marked "verify"; whether and how an obligation applies depends on
-  your classification, role, and jurisdiction. See [`DISCLAIMER.md`](DISCLAIMER.md).
+  your classification, role, and jurisdiction. What is mapped, what deliberately is not, and why the
+  three repositories answer that differently:
+  [what this maps, and what it does not](docs/00-scope/regulatory-scope.md). See also
+  [`DISCLAIMER.md`](DISCLAIMER.md).
 - **The rubric is a starting point, not a calibrated standard.** Dimensions are equally weighted and
   the thresholds are illustrative — adapt them to your own risk appetite. Which numbers are
   judgement, and what each one gets wrong on purpose, is recorded in

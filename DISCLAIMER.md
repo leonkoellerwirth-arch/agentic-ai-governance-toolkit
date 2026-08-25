@@ -12,6 +12,11 @@ provided to help teams structure their own governance work. They are **not**:
 - a substitute for review by qualified legal counsel and your own risk, compliance, and audit
   functions.
 
+Three things that look alike are treated very differently here: what an article requires (mapped),
+whether it applies to a given system (deliberately not mapped), and how well an organization meets
+it (deliberately not scored). The boundary is set out in
+[what this maps, and what it does not](docs/00-scope/regulatory-scope.md).
+
 Regulatory references in this repository are included only where they can be stated generically or
 verified. Where a specific obligation depends on your jurisdiction, your role in the value chain, or
 the concrete facts of a use case, the checklists point you to the topic and expect you to confirm the
