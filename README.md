@@ -65,6 +65,31 @@ agent-eval log-analyze  --input evaluator/examples/logs-sample.jsonl \
                         --policy evaluator/policies/example-policy.yaml
 ```
 
+## Does the law still say what the mapping cites?
+
+A control mapping cites a legal text. Months later the question is not what the mapping says but
+whether the text still says it — and a pin never notices that the law moved. `legal-status` answers
+that as an artifact: per pinned act, the version cited, the newest the Publications Office reports,
+when that was checked, and against which source. It exits non-zero when a pin has been superseded.
+
+```bash
+agent-eval legal-status                                   # the acts this toolkit pins
+agent-eval legal-status --profile your-register.yaml \
+                        --for "Your organisation" --lang de
+```
+
+The register is yours. `templates/register.example.yaml` is the shape: every act needs a reason —
+a list of acts with no reason per act is a list, not a selection — and `excluded:` records what you
+deliberately left out, with the condition that would bring it back. The reason is your statement;
+the record marks it as unverified and says so in its own text.
+
+**The scope statement is part of the record, not a footnote.** A monthly report that says nothing
+gets read as "nothing changed", and that reading is only defensible if the record states what was
+watched and what was not. A check that could not reach the source is recorded as **unchecked, never
+as current** — that is the single failure mode which turns this kind of record from evidence into
+false comfort. Both rules are enforced by the
+[published schema](docs/08-evidence/legal-status-record.schema.json), not merely described.
+
 ## The gate
 
 The three commands above already exit non-zero on a finding. That makes them a gate — what was

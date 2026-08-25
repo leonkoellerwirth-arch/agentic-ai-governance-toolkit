@@ -42,6 +42,7 @@ respects it.
 | **[Approval file](https://github.com/leonkoellerwirth-arch/rag-approval-blueprint)** | Eight parts, from protection requirement through to the board submission — as templates and as two worked cases. |
 | **[Decision records](https://github.com/leonkoellerwirth-arch/rag-approval-blueprint/tree/main/decisions)** | Eighteen questions per use case, each answered at a reference the build resolves. Completeness is a number, not a claim. |
 | **[Runtime enforcement](https://github.com/leonkoellerwirth-arch/local-agent-pipeline)** | Pre-action action-space whitelist, fail-safe human gate, hash-chained audit trail. A few hundred readable lines. |
+| **[Legal-status record](README.md#does-the-law-still-say-what-the-mapping-cites)** | Per pinned act: the version cited, the newest the source reports, when that was checked. Says what it did not watch; an unreachable source is unchecked, never current. |
 | **[The gate](README.md#the-gate)** | The evaluator's exit codes as one command that writes JSON evidence. Runs offline; the CI action is optional. |
 
 ## Why it is useful
