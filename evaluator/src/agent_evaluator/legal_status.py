@@ -474,10 +474,29 @@ CELEX = re.compile(r"3\d{4}[A-Z]\d{4}")
 CONSOLIDATED = re.compile(r"0\d{4}[A-Z]\d{4}-\d{8}")
 ENDPOINT = "https://publications.europa.eu/webapi/rdf/sparql"
 
+# Two routes to the same question, on purpose.
+#
+# The first matches consolidated identifiers by their shape. That is a string heuristic: it works
+# because a consolidation of 32023R1230 is called 02023R1230-<date>, not because the repository
+# says the two are related. The second asks the relation the repository actually models,
+# `act_consolidated_based_on_resource_legal`, which is what we mean.
+#
+# On 25.08.2026 they agreed on all 14 acts checked, across 27 consolidations. Agreement today is
+# not a guarantee for next month, and a route with a blind spot returns a short list rather than an
+# error — which would read as "no newer consolidation" and be believed. So both are asked and the
+# answers are merged. The result is a floor: what at least one route could see.
+
 _QUERY = """PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
 SELECT DISTINCT ?celex WHERE {
   ?w cdm:resource_legal_id_celex ?celex .
   FILTER(STRSTARTS(STR(?celex), "%s"))
+} ORDER BY ?celex"""
+
+_RELATION_QUERY = """PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
+SELECT DISTINCT ?celex WHERE {
+  ?base cdm:resource_legal_id_celex "%s"^^<http://www.w3.org/2001/XMLSchema#string> .
+  ?c cdm:act_consolidated_based_on_resource_legal ?base .
+  ?c cdm:resource_legal_id_celex ?celex .
 } ORDER BY ?celex"""
 
 Resolver = Callable[[str], list[str]]
@@ -600,33 +619,56 @@ def load_profile(
     return entries, exclusions, block
 
 
-def live_resolver(retries: int = 4, backoff: float = 4.0, sleep=time.sleep) -> Resolver:
-    """Ask the Publications Office which consolidations of a work exist.
+def _ask_endpoint(query: str) -> list[str]:
+    url = urllib.parse.urlencode({"format": "application/sparql-results+json"})
+    body = urllib.parse.urlencode({"query": query}).encode()
+    request = urllib.request.Request(
+        f"{ENDPOINT}?{url}", data=body, headers={"Accept": "application/sparql-results+json"}
+    )
+    with urllib.request.urlopen(request, timeout=120) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    return [row["celex"]["value"] for row in payload["results"]["bindings"]]
 
-    The endpoint answers 502/503 under load often enough that a single attempt is not a check.
-    Retries; if it still cannot be reached, it raises — and the caller records the act as
-    unchecked. It is never reported as current on the strength of an answer that never arrived.
+
+def live_resolver(
+    retries: int = 4,
+    backoff: float = 4.0,
+    sleep=time.sleep,
+    ask: Callable[[str], list[str]] = _ask_endpoint,
+) -> Resolver:
+    """Ask the Publications Office which consolidations of a work exist, by both routes.
+
+    The endpoint answers 502/503 often enough that a single attempt is not a check, so each route
+    is retried. A route that still cannot be reached is dropped and the other one carries the
+    answer — that is the evidence we had before the second route existed, and the record's wording
+    stays true of it. Only when neither route answers does this raise, and the caller records the
+    act as unchecked. It is never reported as current on the strength of an answer that never
+    arrived.
     """
 
-    def resolve(base: str) -> list[str]:
+    def one(query: str) -> list[str]:
         last: Exception | None = None
         for attempt in range(retries):
             try:
-                query = urllib.parse.urlencode({"format": "application/sparql-results+json"})
-                body = urllib.parse.urlencode({"query": _QUERY % base}).encode()
-                request = urllib.request.Request(
-                    f"{ENDPOINT}?{query}",
-                    data=body,
-                    headers={"Accept": "application/sparql-results+json"},
-                )
-                with urllib.request.urlopen(request, timeout=120) as response:
-                    payload = json.loads(response.read().decode("utf-8"))
-                return sorted(row["celex"]["value"] for row in payload["results"]["bindings"])
+                return ask(query)
             except Exception as error:  # network, endpoint, malformed answer
                 last = error
                 if attempt < retries - 1:
                     sleep(backoff * (attempt + 1))
-        raise RuntimeError(f"{ENDPOINT} could not be reached for {base}: {last}")
+        raise RuntimeError(last)
+
+    def resolve(base: str) -> list[str]:
+        act = "3" + base[1:]
+        found: set[str] = set()
+        failures: list[str] = []
+        for query in (_QUERY % base, _RELATION_QUERY % act):
+            try:
+                found |= set(one(query))
+            except RuntimeError as error:
+                failures.append(str(error))
+        if len(failures) == 2:
+            raise RuntimeError(f"{ENDPOINT} could not be reached for {base}: {failures[0]}")
+        return sorted(found)
 
     return resolve
 

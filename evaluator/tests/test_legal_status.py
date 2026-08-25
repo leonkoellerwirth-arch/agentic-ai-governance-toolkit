@@ -348,3 +348,75 @@ def test_a_foreign_pin_cannot_reach_the_comparison_by_either_route(tmp_path):
     """load_profile refuses it; if one ever slipped past, assess would not call it current."""
     status, _, _ = ls.assess("02024R1689-20240712", ["02023R1230-20260727"])
     assert status == "unchecked"
+
+
+# --- Two routes to the same question -----------------------------------------------------------
+
+
+def _asker(answers):
+    """A stand-in endpoint: maps a query fragment to an answer, or to an exception to raise."""
+
+    def ask(query):
+        for fragment, answer in answers.items():
+            if fragment in query:
+                if isinstance(answer, Exception):
+                    raise answer
+                return answer
+        raise AssertionError(f"unexpected query: {query[:60]}")
+
+    return ask
+
+
+def test_the_two_routes_are_merged_not_chosen_between():
+    """A route with a blind spot returns a short list, not an error. Short would read as current."""
+    resolve = ls.live_resolver(
+        retries=1,
+        sleep=lambda _: None,
+        ask=_asker(
+            {
+                "STRSTARTS": ["02024R1689-20240712"],
+                "act_consolidated_based_on": ["02024R1689-20260727"],
+            }
+        ),
+    )
+    assert resolve("02024R1689") == ["02024R1689-20240712", "02024R1689-20260727"]
+
+
+def test_one_route_still_answers_when_the_other_cannot():
+    """That is the evidence we had before the second route existed; the record's wording holds."""
+    resolve = ls.live_resolver(
+        retries=1,
+        sleep=lambda _: None,
+        ask=_asker(
+            {
+                "STRSTARTS": ["02024R1689-20240712", "02024R1689-20260727"],
+                "act_consolidated_based_on": RuntimeError("502"),
+            }
+        ),
+    )
+    assert resolve("02024R1689") == ["02024R1689-20240712", "02024R1689-20260727"]
+
+
+def test_when_neither_route_answers_the_act_is_unchecked():
+    """The one thing that must never become a quiet empty list."""
+    resolve = ls.live_resolver(
+        retries=1,
+        sleep=lambda _: None,
+        ask=_asker({"celex": RuntimeError("503")}),
+    )
+    with pytest.raises(RuntimeError, match="could not be reached"):
+        resolve("02024R1689")
+
+
+def test_the_relation_route_asks_about_the_act_not_the_consolidated_base():
+    """0-prefixed identifiers name consolidations; the relation hangs off the act itself."""
+    seen = []
+
+    def ask(query):
+        seen.append(query)
+        return []
+
+    ls.live_resolver(retries=1, sleep=lambda _: None, ask=ask)("02023R1230")
+    relation = next(q for q in seen if "act_consolidated_based_on" in q)
+    assert '"32023R1230"' in relation
+    assert "02023R1230" not in relation

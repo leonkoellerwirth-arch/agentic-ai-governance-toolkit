@@ -16,10 +16,7 @@ committed snapshot instead, and stays offline.
 from __future__ import annotations
 
 import json
-import re
 import sys
-import urllib.parse
-import urllib.request
 from datetime import date
 from pathlib import Path
 
@@ -28,33 +25,19 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 REGISTER = ROOT / "evaluator" / "src" / "agent_evaluator" / "regulatory_sources.yaml"
 SNAPSHOT = ROOT / "evaluator" / "src" / "agent_evaluator" / "consolidations.json"
-ENDPOINT = "https://publications.europa.eu/webapi/rdf/sparql"
 
-QUERY = """PREFIX cdm: <http://publications.europa.eu/ontology/cdm#>
-SELECT DISTINCT ?celex WHERE {
-  ?w cdm:resource_legal_id_celex ?celex .
-  FILTER(STRSTARTS(STR(?celex), "%s"))
-} ORDER BY ?celex"""
+# The endpoint is asked in exactly one place. This script used to carry its own copy of the query,
+# which is how the two would have drifted — and did: the package learned to ask by two routes while
+# this still asked by one, so the committed snapshot would have kept a blind spot the live check no
+# longer has.
+sys.path.insert(0, str(ROOT / "evaluator" / "src"))
+from agent_evaluator.legal_status import (  # noqa: E402
+    ENDPOINT,
+    consolidated_base,
+    live_resolver,
+)
 
-
-def consolidated_base(celex: str) -> str:
-    """32024R1689 -> 02024R1689. Consolidated CELEX ids carry a leading 0 and a date suffix."""
-    return (
-        "0" + celex[1:]
-        if re.fullmatch(r"3\d{4}[A-Z]\d{4}", celex)
-        else celex.split("-")[0]
-    )
-
-
-def versions(base: str) -> list[str]:
-    url = f"{ENDPOINT}?{urllib.parse.urlencode({'format': 'application/sparql-results+json'})}"
-    body = urllib.parse.urlencode({"query": QUERY % base}).encode()
-    request = urllib.request.Request(
-        url, data=body, headers={"Accept": "application/sparql-results+json"}
-    )
-    with urllib.request.urlopen(request, timeout=90) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    return sorted(row["celex"]["value"] for row in payload["results"]["bindings"])
+versions = live_resolver()
 
 
 def main(argv: list[str]) -> int:

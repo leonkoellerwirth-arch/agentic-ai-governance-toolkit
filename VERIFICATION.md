@@ -87,6 +87,34 @@ drifts from it. It does not mean a lawyer has read the register, and it never di
 obligation applies to a given system is [not something this project
 answers](docs/00-scope/regulatory-scope.md).
 
+## Cross-check of 2026-08-25 — the query route against a second route
+
+The consolidation check finds versions by matching identifiers on their shape: a consolidation of
+`32023R1230` is called `02023R1230-<date>`. That is a string heuristic. It works because the
+repository names things that way, not because the repository says the two are related — and a
+heuristic with a blind spot returns a short list rather than an error, which reads as "no newer
+consolidation" and is believed.
+
+Cellar models the relation itself: `cdm:act_consolidated_based_on_resource_legal` links a
+consolidated act to the act it consolidates. Both routes were run over 14 acts — the two the
+register pins, plus the twelve of a machinery register built to exercise the profile path.
+
+| | |
+|---|---|
+| Acts checked | 14 |
+| Consolidations found | 27 |
+| Acts where the routes disagreed | 0 |
+
+Agreement on one day is not a guarantee for the next, so this was not filed as a result and left
+there: `live_resolver` now asks both routes and merges the answers, and `scripts/check_consolidations.py`
+was changed to call it instead of carrying its own copy of the query. A route that cannot be
+reached is dropped and the other carries the answer; only when neither answers is the act recorded
+as unchecked.
+
+What this does not establish: that Cellar holds every consolidation that exists. Both routes read
+the same repository. A consolidation not yet published there is invisible to both, which is why the
+record says an absence of findings is not a statement that nothing changed.
+
 ## Open questions
 
 - The snapshot covers the two acts this toolkit cites. ISO/IEC 42001, NIST AI RMF and MaRisk carry
