@@ -64,11 +64,13 @@ that no longer exists fails it too.
 
 **Support outside this project**
 
-- None. This is a judgement call, and is recorded as one.
+- SAFR — Safeguards for Agentic Finance at Runtime, the industry white paper convened by the Monetary Authority of Singapore with HSBC, J.P. Morgan, Mastercard, Visa, OCBC and others (July 2026) — resolves every proposed agent action to one of FOUR dispositions: deny, escalate, auto-execute, or OBSERVE. It contradicts this decision, it is the most serious published work on the same question, and recording it as support would be dishonest. It is recorded as opposition.
 
 **What it accepts as a cost**
 
 Real deployments have gradations this cannot express — dual approval, time-boxed automatic, approval only above a threshold. Those have to be written into the preconditions as prose rather than modelled, which makes them harder to check mechanically. That is the price of a matrix a reviewer can hold in their head.
+The specific cost SAFR exposes is sharper. Its fourth disposition, "observe", is not a weaker approval — it is an action that proceeds AND is looked at afterwards. This matrix cannot say that. It records an evidence artifact for every row and never says whether anyone reads it, so "automatic" here silently covers both "nobody looks" and "reviewed daily", which the toolkit's own C3 minimum controls do distinguish.
+The decision stands for now, for one reason that is about discipline rather than modelling: a fourth tier that means "allowed, and we watch" becomes the default answer to every uncomfortable row, and the watching is the part that quietly stops happening. What would change it: evidence from an actual deployment that the three tiers forced a wrong answer, or a way to express review cadence per row that does not become an escape hatch.
 
 ### PD-AUTHORITY-FORBIDDEN — An action is forbidden only when approval cannot repair it — it destroys the evidence of itself, or moves the boundary from inside the boundary. Everything else is approval, however severe.
 

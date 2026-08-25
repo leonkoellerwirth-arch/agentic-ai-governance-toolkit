@@ -221,6 +221,15 @@ about first:
 
 ## Open questions
 
+- **A serious framework disagrees about the number of tiers.** SAFR — the industry white paper
+  convened by the Monetary Authority of Singapore with HSBC, J.P. Morgan, Mastercard, Visa and
+  OCBC — resolves every proposed action to *deny, escalate, auto-execute or observe*. This matrix
+  has no equivalent of "observe": an action that proceeds and is looked at afterwards. The reason
+  is recorded in `PD-AUTHORITY-001` along with what would change it, because a disagreement with
+  work of that weight belongs in the open questions rather than in a footnote.
+- **Nothing here says whether the evidence is read.** Every row names an artifact; no row says
+  who looks at it or how often. "Automatic" therefore covers both "nobody looks" and "reviewed
+  daily against thresholds" — a distinction the control levels do make and this table does not.
 - The matrix is declared and rendered, not enforced. A check reconciling it against a running
   agent's declared action space would make the boundary testable rather than stated; it does not
   exist yet. Until it does, this documents an intent, and an evidence trail proves that something

@@ -37,6 +37,23 @@ All notable changes to this project are documented here. The format follows
   second implementation. The open questions name what is still missing — stable identifiers for
   findings and controls, archiving the rulesets a digest points at, and signing the manifest.
 
+- **`PD-AUTHORITY-001` now records the framework that disagrees with it.** SAFR — Safeguards for
+  Agentic Finance at Runtime, convened by the Monetary Authority of Singapore with HSBC,
+  J.P. Morgan, Mastercard, Visa and OCBC in July 2026 — resolves every proposed agent action to
+  one of **four** dispositions: deny, escalate, auto-execute, or *observe*. This toolkit decided on
+  three and wrote down why. The most serious published work on the same question came to a
+  different answer.
+
+  It is recorded in `external_support` as opposition rather than omitted, which is the only
+  honest place for it. The cost it exposes is named: "observe" is not a weaker approval but an
+  action that proceeds *and is looked at afterwards*, and this matrix cannot express that — it
+  names an evidence artifact per row and never says whether anyone reads it, so "automatic"
+  silently covers both "nobody looks" and "reviewed daily", a distinction the control levels
+  themselves do make.
+
+  The decision stands, on a discipline argument rather than a modelling one, and the entry states
+  what would change it.
+
 ### Fixed
 
 - **The checklists read as if deferred obligations were already in force.** Regulation (EU)
