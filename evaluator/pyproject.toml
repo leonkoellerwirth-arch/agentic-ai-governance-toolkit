@@ -21,7 +21,9 @@ dependencies = [
 [project.optional-dependencies]
 # The LLM-judge pattern is optional — the core evaluator runs without it.
 llm = ["ollama>=0.3"]
-dev = ["pytest>=8.0", "ruff>=0.5"]
+# jsonschema is a test-only dependency: it validates the published evidence manifest schema and
+# every manifest this tool writes against it. A published schema nobody checks is documentation.
+dev = ["pytest>=8.0", "ruff>=0.5", "jsonschema>=4.21"]
 
 [project.scripts]
 agent-eval = "agent_evaluator.cli:main"

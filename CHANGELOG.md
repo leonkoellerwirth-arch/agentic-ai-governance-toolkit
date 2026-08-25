@@ -27,6 +27,16 @@ All notable changes to this project are documented here. The format follows
   since it was written. They show nothing about whether a check was authorised, complete or
   correct.
 
+- **A published schema for that manifest**
+  ([`docs/08-evidence/`](docs/08-evidence/)), with a conformance suite that validates the schema
+  itself, every manifest the tool writes, and seven malformed shapes a second implementation would
+  plausibly emit. A published schema nobody checks is documentation.
+
+  The accompanying note declines the word *standard*. This is a specified, versioned,
+  machine-checkable format written by exactly one tool; what would make it more than that is a
+  second implementation. The open questions name what is still missing — stable identifiers for
+  findings and controls, archiving the rulesets a digest points at, and signing the manifest.
+
 ### Fixed
 
 - **The checklists read as if deferred obligations were already in force.** Regulation (EU)
