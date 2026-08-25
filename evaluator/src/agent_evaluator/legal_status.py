@@ -612,22 +612,30 @@ def load_profile(
     return entries, exclusions, block
 
 
-def _ask_endpoint(query: str) -> list[str]:
+def _ask_endpoint(query: str) -> tuple[list[str], str]:
+    """Returns the identifiers and the answer exactly as it arrived.
+
+    The raw text is not decoration. A finding is "a newer consolidation exists", and six months
+    later the only way to show that was true is the answer the source actually gave. A record that
+    keeps the conclusion and discards the evidence asks to be believed.
+    """
     url = urllib.parse.urlencode({"format": "application/sparql-results+json"})
     body = urllib.parse.urlencode({"query": query}).encode()
     request = urllib.request.Request(
         f"{ENDPOINT}?{url}", data=body, headers={"Accept": "application/sparql-results+json"}
     )
     with urllib.request.urlopen(request, timeout=120) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    return [row["celex"]["value"] for row in payload["results"]["bindings"]]
+        raw = response.read().decode("utf-8")
+    payload = json.loads(raw)
+    return [row["celex"]["value"] for row in payload["results"]["bindings"]], raw
 
 
 def live_resolver(
     retries: int = 4,
     backoff: float = 4.0,
     sleep=time.sleep,
-    ask: Callable[[str], list[str]] = _ask_endpoint,
+    ask: Callable[[str], tuple[list[str], str]] = _ask_endpoint,
+    sink: Callable[[str, str, str], None] | None = None,
 ) -> Resolver:
     """Ask the Publications Office which consolidations of a work exist, by both routes.
 
@@ -639,11 +647,14 @@ def live_resolver(
     arrived.
     """
 
-    def one(query: str) -> list[str]:
+    def one(route: str, query: str) -> list[str]:
         last: Exception | None = None
         for attempt in range(retries):
             try:
-                return ask(query)
+                versions, raw = ask(query)
+                if sink is not None:
+                    sink(route, query, raw)
+                return versions
             except Exception as error:  # network, endpoint, malformed answer
                 last = error
                 if attempt < retries - 1:
@@ -654,9 +665,9 @@ def live_resolver(
         act = celex_mod.act_of(base)
         found: set[str] = set()
         failures: list[str] = []
-        for query in (_QUERY % base, _RELATION_QUERY % act):
+        for route, query in (("prefix", _QUERY % base), ("relation", _RELATION_QUERY % act)):
             try:
-                found |= set(one(query))
+                found |= set(one(route, query))
             except RuntimeError as error:
                 failures.append(str(error))
         if len(failures) == 2:

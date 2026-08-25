@@ -7,6 +7,7 @@ watched and what it did not, and a check that could not be made is never reporte
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import pytest
@@ -362,7 +363,7 @@ def _asker(answers):
             if fragment in query:
                 if isinstance(answer, Exception):
                     raise answer
-                return answer
+                return answer, json.dumps({"stub": answer})
         raise AssertionError(f"unexpected query: {query[:60]}")
 
     return ask
@@ -415,7 +416,7 @@ def test_the_relation_route_asks_about_the_act_not_the_consolidated_base():
 
     def ask(query):
         seen.append(query)
-        return []
+        return [], "{}"
 
     ls.live_resolver(retries=1, sleep=lambda _: None, ask=ask)("02023R1230")
     relation = next(q for q in seen if "act_consolidated_based_on" in q)
