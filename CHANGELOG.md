@@ -91,7 +91,8 @@ All notable changes to this project are documented here. The format follows
   that a single attempt is not a check, so the resolver retries; an act it still cannot reach is
   `unchecked`. A record in which no act could be checked exits 2, matching
   `scripts/check-consolidations.sh` — reporting that run as clean is the false-comfort mode in a
-  different hat.
+  different hat. That exit applies to the built-in register too: if the consolidation snapshot ever
+  goes missing, the run stops reading as clean.
 
 - **Legal-status record** (`agent-eval legal-status`, `--json` for the machine-readable form): for
   every pinned act, the version cited, the newest the Publications Office reports, when that was
