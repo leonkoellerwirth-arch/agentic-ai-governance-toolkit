@@ -60,6 +60,17 @@ All notable changes to this project are documented here. The format follows
   decision fails `render-docs --check` — the same invariant the rubrics already live under.
   Unregistered thresholds are personal preference wearing governance vocabulary.
 
+  **The refusal criterion is checked, not stated.** A second review pass found the sharper
+  version of the same problem: the criterion did not carry two of its own four refusals. Deciding
+  to delete destroys nothing — execution does — and reading a secret neither destroys evidence nor
+  moves a boundary. The criterion now has three named limbs (`evidence_destruction`,
+  `boundary_move`, `instant_harm`), every refused row names the one it meets, and validation
+  rejects a refusal whose limb is not declared. `decide-deletion` became
+  `select-records-for-deletion` under approval, with the enforceable control being that the
+  selector does not also execute and that the agent supplies no parameter widening an approved
+  rule. The payment row lost a circular limb that refused any instance "without effective prior
+  approval" while instance approval was the baseline.
+
   Five actions the first draft omitted are in: executing code, bulk export, deciding an individual
   case, changing production logic, and fetching external content. The document also reconciles
   itself with the scope statement rather than leaving the two side by side: this is a starting

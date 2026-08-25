@@ -16,6 +16,10 @@ conditional fields replaced it:
 ``automatic_if``        the narrow carve-out under which an action that normally needs approval
                         may run unattended.
 ``forbidden_when``      contexts in which an action that normally needs approval is refused.
+
+A forbidden action must name which limb of ``forbidden_criterion`` it meets. The first version of
+this file failed its own criterion on two of four refusals, and only requiring the limb per row
+made that visible.
 ``needs_competent_function_when``
                         contexts where any named approver is not enough and the responsible
                         function must approve — a regulatory disclosure is not signed off by
@@ -59,7 +63,7 @@ ALLOWED_CONDITIONS: dict[str, tuple[str, ...]] = {
 @dataclass(frozen=True)
 class Matrix:
     title: str
-    forbidden_criterion: str
+    forbidden_criterion: dict[str, Any]
     authorities: list[dict[str, Any]]
     groups: list[dict[str, Any]]
     actions: list[dict[str, Any]]
@@ -69,7 +73,7 @@ def load_matrix(path: Path | None = None) -> Matrix:
     raw = yaml.safe_load((path or MATRIX_PATH).read_text(encoding="utf-8"))
     return Matrix(
         title=raw["title"],
-        forbidden_criterion=raw.get("forbidden_criterion", ""),
+        forbidden_criterion=raw.get("forbidden_criterion") or {},
         authorities=raw["authorities"],
         groups=raw["groups"],
         actions=raw["actions"],
@@ -84,8 +88,13 @@ def check_matrix(matrix: Matrix | None = None) -> list[str]:
     authority_keys = {a["key"] for a in matrix.authorities}
     group_keys = {g["key"] for g in matrix.groups}
 
-    if not str(matrix.forbidden_criterion).strip():
-        problems.append("forbidden_criterion is missing — without it, 'forbidden' is a preference")
+    criterion = matrix.forbidden_criterion or {}
+    limbs = {limb["key"] for limb in criterion.get("limbs", [])}
+    if not criterion.get("summary") or not limbs:
+        problems.append(
+            "forbidden_criterion needs a summary and at least one named limb — "
+            "a criterion nothing is checked against is a sentence, not a rule"
+        )
 
     seen: set[str] = set()
     used_groups: set[str] = set()
@@ -117,6 +126,16 @@ def check_matrix(matrix: Matrix | None = None) -> list[str]:
                     f"{aid}: {field} does not apply to a '{authority}' action — "
                     f"only {allowed or 'no conditions'} do"
                 )
+
+        if authority == "forbidden":
+            because = action.get("forbidden_because")
+            if because not in limbs:
+                problems.append(
+                    f"{aid}: forbidden_because {because!r} is not a limb of the criterion "
+                    f"({sorted(limbs)}) — a refusal the criterion does not carry is a preference"
+                )
+        elif action.get("forbidden_because"):
+            problems.append(f"{aid}: forbidden_because only applies to a forbidden action")
 
         if authority == "automatic" and not action.get("automatic_requires"):
             problems.append(

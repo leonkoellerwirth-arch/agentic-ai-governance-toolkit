@@ -44,13 +44,24 @@ authorities:
     marker: "✗"
     summary: Refused by design. The attempt is recorded and is itself a finding.
 
-# The criterion behind every `forbidden` row. Registered as PD-AUTHORITY-FORBIDDEN.
-# An action is forbidden only when approval cannot repair it: the action would
-# disable the evidence of itself, or would move the boundary from inside it.
-# Everything else is approval, however severe.
-forbidden_criterion: >-
-  Approval cannot repair it — the action destroys the evidence of itself, or changes the
-  boundary from inside the boundary.
+# The criterion behind every `forbidden` row, in named limbs. Registered as
+# PD-AUTHORITY-FORBIDDEN. Every forbidden action must name the limb it meets, and
+# validation rejects one that does not — a criterion nothing is checked against is
+# a sentence, not a rule. The first version of this file failed its own criterion
+# on two of four rows, and only naming the limb per row made that visible.
+forbidden_criterion:
+  summary: >-
+    Approval cannot repair it. Everything else is approval with requirements attached, however
+    severe — a refusal teams route around is worse than a demanding approval they follow.
+  limbs:
+    - key: evidence_destruction
+      statement: The action destroys or disables the evidence of itself.
+    - key: boundary_move
+      statement: The action moves the boundary from inside the boundary.
+    - key: instant_harm
+      statement: >-
+        The harm completes at the instant of the action, so no later control undoes it and no
+        approval can be attached to a smaller version of it.
 
 groups:
   - key: read
@@ -108,6 +119,7 @@ actions:
     group: read
     action: Read credentials, keys or secrets
     authority: forbidden
+    forbidden_because: instant_harm
     evidence: Policy event naming the attempted secret and the calling step
     rationale: >-
       An agent that can read a secret can exfiltrate it, and no later approval recovers from
@@ -183,6 +195,8 @@ actions:
       - The rule was approved in advance under four eyes and is versioned.
       - A legal-hold check runs immediately before execution.
       - Execution writes an immutable deletion record naming rule version and scope.
+      - Selection criteria are part of the approved rule version; the agent supplies no
+        parameter that widens the target set.
     escalates_when:
       - The scope of a run exceeds the approved rule's expected volume.
     evidence: Deletion record per run — rule version, scope, counts, legal-hold result
@@ -190,15 +204,18 @@ actions:
       Expired retention, confirmed erasure requests and de-duplication are executed on a schedule,
       not decided ad hoc. Forbidding execution outright would forbid the compliant path.
 
-  - id: decide-deletion
+  - id: select-records-for-deletion
     group: write_internal
-    action: Decide ad hoc that records should be deleted
-    authority: forbidden
-    evidence: Policy event naming the target and the calling step
+    action: Select records for deletion outside an approved rule
+    authority: human_approval
+    forbidden_when:
+      - The selection is executed in the same step that produced it.
+    evidence: Selection record with criteria, resulting record ids, requester and approver
     rationale: >-
-      Deletion is the one action whose success destroys the evidence of itself, which is the
-      criterion for forbidding rather than approving. The decision belongs to the retention
-      process; only its execution is delegable.
+      An earlier version forbade this outright and was wrong twice over: deciding destroys
+      nothing — execution does — so it fails the refusal criterion, and forbidding it pushes
+      the real risk out of sight. The enforceable control is that whoever selects does not also
+      execute, and that the agent supplies no parameter that widens an approved rule.
 
   - id: revoke-access
     group: write_internal
@@ -235,7 +252,9 @@ actions:
     action: Execute code, shell commands or infrastructure operations
     authority: human_approval
     automatic_if:
-      - Execution is confined to a sandbox with no network and no credentials.
+      - No network egress and no credentials are reachable from the sandbox.
+      - Writes are confined to an ephemeral workspace; no host mounts, no persistence.
+      - CPU, memory, process and wall-clock limits are enforced and a breach aborts the run.
     evidence: Execution log with the exact command, environment and result
     rationale: >-
       The highest-leverage action in most real deployments and the one most often left implicit.
@@ -279,12 +298,13 @@ actions:
     authority: human_approval
     forbidden_when:
       - The agent selects or alters payee, amount, or the terms of the obligation.
-      - No effective prior approval exists for this specific instance.
     evidence: Payment record with payee, amount, limit check, four-eyes approval and segregation of duties
     rationale: >-
       Payment operations already run on separation of preparation, checking, approval and
       execution; an agent may occupy the preparation and execution slots. What must not happen is
-      the agent choosing the counterparty or the amount.
+      the agent choosing the counterparty or the amount. An earlier version also refused any
+      instance "without effective prior approval", which was circular — instance approval is the
+      baseline, so that limb refused the very path it required.
 
   - id: publish-content
     group: external
@@ -341,6 +361,7 @@ actions:
     group: self
     action: Change its own action space, tools, prompts, connectors or roles
     authority: forbidden
+    forbidden_because: boundary_move
     evidence: Policy event naming the attempted change
     rationale: >-
       The boundary cannot be moved from inside the thing it bounds. This covers indirect routes —
@@ -350,6 +371,7 @@ actions:
     group: self
     action: Disable logging, the audit trail or the human gate
     authority: forbidden
+    forbidden_because: evidence_destruction
     evidence: >-
       Policy event recorded outside the agent's identity; the absence of expected trail entries is
       itself the alarm

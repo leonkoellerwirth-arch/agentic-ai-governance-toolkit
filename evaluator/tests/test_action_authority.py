@@ -67,12 +67,38 @@ def test_a_forbidden_action_carries_no_conditions(matrix: aa.Matrix) -> None:
 def test_missing_forbidden_criterion_is_caught(matrix: aa.Matrix) -> None:
     stripped = aa.Matrix(
         title=matrix.title,
-        forbidden_criterion="  ",
+        forbidden_criterion={},
         authorities=matrix.authorities,
         groups=matrix.groups,
         actions=matrix.actions,
     )
-    assert any("forbidden_criterion is missing" in p for p in aa.check_matrix(stripped))
+    assert any(
+        "needs a summary and at least one named limb" in p for p in aa.check_matrix(stripped)
+    )
+
+
+def test_every_refusal_names_a_limb_of_the_criterion() -> None:
+    """The check that caught two of four refusals meeting none of their own criterion."""
+    loaded = aa.load_matrix()
+    limbs = {limb["key"] for limb in loaded.forbidden_criterion["limbs"]}
+    refusals = [a for a in loaded.actions if a["authority"] == "forbidden"]
+    assert refusals
+    for action in refusals:
+        assert action.get("forbidden_because") in limbs, (
+            f"{action['id']} is refused under a criterion that does not carry it"
+        )
+
+
+def test_refusal_with_an_undeclared_limb_is_caught(matrix: aa.Matrix) -> None:
+    refusal = next(a for a in matrix.actions if a["authority"] == "forbidden")
+    refusal["forbidden_because"] = "seems_dangerous"
+    assert any("is not a limb of the criterion" in p for p in aa.check_matrix(matrix))
+
+
+def test_limb_on_a_non_forbidden_action_is_caught(matrix: aa.Matrix) -> None:
+    approval = next(a for a in matrix.actions if a["authority"] == "human_approval")
+    approval["forbidden_because"] = "instant_harm"
+    assert any("only applies to a forbidden action" in p for p in aa.check_matrix(matrix))
 
 
 def test_every_row_names_evidence_including_the_forbidden_ones() -> None:
@@ -104,7 +130,7 @@ def test_decision_and_execution_are_separate_rows() -> None:
     """The correction Codex found: forbidding both halves forbids the compliant path."""
     ids = {a["id"]: a["authority"] for a in aa.load_matrix().actions}
     assert ids["execute-deletion-rule"] == "automatic"
-    assert ids["decide-deletion"] == "forbidden"
+    assert ids["select-records-for-deletion"] == "human_approval"
     assert ids["revoke-access"] == "automatic"
     assert ids["grant-access"] == "human_approval"
     assert ids["initiate-payment"] == "human_approval"

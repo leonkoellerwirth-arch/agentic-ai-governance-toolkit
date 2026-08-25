@@ -45,11 +45,20 @@ arise with no personal data in it at all. The conditions are now about purpose, 
 recipient, and whether a prior approval exists. The correction is recorded in
 `PD-AUTHORITY-CONDITIONS` rather than quietly applied.
 
-**What makes something forbidden** rather than merely approved is one criterion, and only one:
-*approval cannot repair it — the action destroys the evidence of itself, or moves the boundary
-from inside the boundary.* Four rows meet it. Everything else, however severe, is approval with
-requirements attached, because a refusal that teams route around is worse than a demanding
-approval they follow.
+**What makes something forbidden** rather than merely approved is one criterion — *approval cannot
+repair it* — in three named limbs, and every refused row has to name the limb it meets:
+
+| Limb | Statement | Rows |
+|---|---|---|
+| `evidence_destruction` | The action destroys or disables the evidence of itself. | disable oversight |
+| `boundary_move` | The action moves the boundary from inside the boundary. | modify own scope |
+| `instant_harm` | The harm completes at the instant of the action, so no later control undoes it. | read secrets |
+
+Validation rejects a refusal whose limb is not declared. That is not decoration: an earlier
+version of this file refused four things, and two of them met none of its own criterion —
+deciding to delete destroys nothing, execution does. Requiring the limb per row is what surfaced
+it. Everything else, however severe, is approval with requirements attached, because a refusal
+teams route around is worse than a demanding approval they follow.
 
 **Every row names an evidence artifact, including the refused ones.** A refusal that leaves no
 trace cannot be audited, and an attempt at a refused action is a finding in its own right.
@@ -84,7 +93,7 @@ Actions that change state the organisation controls.
 | Write to its own scratch or working store | ✓ * | – | – | Change log for the working store |
 | Modify customer, contract or master data | – | H | – | Change record with before/after values, approver identity and timestamp |
 | Execute a pre-approved deletion rule | ✓ * | – | – | Deletion record per run — rule version, scope, counts, legal-hold result |
-| Decide ad hoc that records should be deleted | – | – | ✗ | Policy event naming the target and the calling step |
+| Select records for deletion outside an approved rule | – | H * | – | Selection record with criteria, resulting record ids, requester and approver |
 | Revoke access on a leaver, expiry or compromise event | ✓ * | – | – | Entitlement change log with the triggering event and its source system |
 | Grant access or raise a privilege | – | H | – | Entitlement change record with requester, approver, scope and expiry |
 | Change business rules, thresholds, prompts, models or connector configuration in production | – | H | – | Change record with diff, approver, and the release it went out in |
@@ -151,24 +160,27 @@ disagreeing with.
   - *Automatic only while:* The rule was approved in advance under four eyes and is versioned.
   - *Automatic only while:* A legal-hold check runs immediately before execution.
   - *Automatic only while:* Execution writes an immutable deletion record naming rule version and scope.
+  - *Automatic only while:* Selection criteria are part of the approved rule version; the agent supplies no parameter that widens the target set.
   - *Needs a person when:* The scope of a run exceeds the approved rule's expected volume.
-- **Decide ad hoc that records should be deleted** — Deletion is the one action whose success destroys the evidence of itself, which is the criterion for forbidding rather than approving. The decision belongs to the retention process; only its execution is delegable.
+- **Select records for deletion outside an approved rule** — An earlier version forbade this outright and was wrong twice over: deciding destroys nothing — execution does — so it fails the refusal criterion, and forbidding it pushes the real risk out of sight. The enforceable control is that whoever selects does not also execute, and that the agent supplies no parameter that widens an approved rule.
+  - *Refused when:* The selection is executed in the same step that produced it.
 - **Revoke access on a leaver, expiry or compromise event** — Timely removal of access is a control, not a risk. Requiring a human in this path makes the organisation slower at exactly the moment speed is the control.
   - *Automatic only while:* The revocation follows a rule determined in advance, from a traceable source event.
   - *Automatic only while:* A documented break-glass path exists for wrongful revocation.
 - **Grant access or raise a privilege** — Widening reach is the direction that needs a decision. It stays inside joiner-mover-leaver; the agent may request, never decide.
 - **Change business rules, thresholds, prompts, models or connector configuration in production** — Self-modification is covered elsewhere. This is the neighbouring case that is easy to miss: an agent changing somebody else's production logic, which is a deployment and reviewed as one.
 - **Execute code, shell commands or infrastructure operations** — The highest-leverage action in most real deployments and the one most often left implicit. Inside a sealed sandbox it is a working step; anywhere else it is arbitrary capability.
-  - *May run unattended if:* Execution is confined to a sandbox with no network and no credentials.
+  - *May run unattended if:* No network egress and no credentials are reachable from the sandbox.
+  - *May run unattended if:* Writes are confined to an ephemeral workspace; no host mounts, no persistence.
+  - *May run unattended if:* CPU, memory, process and wall-clock limits are enforced and a breach aborts the run.
 - **Export, download or stage a bulk extract** — This is the exfiltration path, and reading rows one at a time is not the same action as taking all of them at once. Volume is the risk; the per-record rows do not cover it.
 - **Send a pre-approved templated notification** — Requiring a human for every transactional confirmation would make the matrix unusable and push teams around it. The control is the template, not the send.
   - *Automatic only while:* The template was approved in advance and is versioned.
   - *Automatic only while:* The recipient comes from the record, not from the model.
   - *Automatic only while:* No free text is generated into the message.
 - **Compose and send a message outside the organisation** — The first action here a third party observes. Recall is not a control; the recipient has already read it.
-- **Initiate a payment or place a binding order** — Payment operations already run on separation of preparation, checking, approval and execution; an agent may occupy the preparation and execution slots. What must not happen is the agent choosing the counterparty or the amount.
+- **Initiate a payment or place a binding order** — Payment operations already run on separation of preparation, checking, approval and execution; an agent may occupy the preparation and execution slots. What must not happen is the agent choosing the counterparty or the amount. An earlier version also refused any instance "without effective prior approval", which was circular — instance approval is the baseline, so that limb refused the very path it required.
   - *Refused when:* The agent selects or alters payee, amount, or the terms of the obligation.
-  - *Refused when:* No effective prior approval exists for this specific instance.
 - **Publish content to a public channel** — Publication is irreversible in the only sense that matters: it has been seen. The evidence must be the artifact itself, not a description of it. For a mandatory disclosure "a named person approved it" is not enough — the responsible function has to.
   - *Needs the responsible function, not any approver, when:* The publication is a regulatory disclosure or a market communication.
 - **Fetch and process external content, URLs or attachments** — The standard route for prompt injection, server-side request forgery and data egress. Allowlisted and isolated it is routine; open, it is an untrusted instruction channel.
@@ -190,10 +202,12 @@ Copy it, delete the rows that do not apply, and change the ones that do — then
 you changed and why, because that note is the output of the exercise. Four rows are worth arguing
 about first:
 
-- **Executing an approved deletion rule is automatic; deciding ad hoc to delete is refused.**
-  Expired retention, confirmed erasure requests and de-duplication run on a schedule under a
-  four-eyes-approved rule. Forbidding execution outright would forbid the compliant path, which an
-  earlier version of this file did.
+- **Executing an approved deletion rule is automatic; selecting records outside one needs
+  approval — and the selector may not also execute.** Expired retention, confirmed erasure requests
+  and de-duplication run on a schedule under a four-eyes-approved rule, with the selection criteria
+  part of the approved rule version so the agent cannot widen the target set through a parameter.
+  Two earlier versions got this wrong in opposite directions: first forbidding execution and so
+  forbidding the compliant path, then forbidding the decision under a criterion it did not meet.
 - **Revoking access is automatic; granting it needs approval.** Timely removal is a control, not a
   risk — putting a person in that path makes the organisation slower at the moment speed *is* the
   control.
