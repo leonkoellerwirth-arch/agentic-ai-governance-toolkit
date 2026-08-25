@@ -1,0 +1,90 @@
+{
+  "_source": "Publications Office Cellar — http://publications.europa.eu/resource/celex/{CELEX} with Accept: application/xhtml+xml and Accept-Language: eng",
+  "_why": "The official heading of every article this toolkit cites, taken from the primary text rather than from a rendering of it. Refresh with scripts/refresh-official-headings.sh; a test compares regulatory_sources.yaml against this file.",
+  "_fetched": "2026-08-25",
+  "frameworks": {
+    "eu_ai_act": {
+      "celex": "02024R1689-20260727",
+      "uri": "http://publications.europa.eu/resource/celex/02024R1689-20260727",
+      "headings": {
+        "5": "Prohibited AI practices",
+        "6": "Classification rules for high-risk AI systems",
+        "annex-III": "High-risk AI systems referred to in Article 6(2)",
+        "9": "Risk management system",
+        "10": "Data and data governance",
+        "11": "Technical documentation",
+        "12": "Record-keeping",
+        "annex-IV": "Technical documentation referred to in Article 11(1)",
+        "13": "Transparency and provision of information to deployers",
+        "14": "Human oversight",
+        "15": "Accuracy, robustness and cybersecurity",
+        "50": "Transparency obligations for providers and deployers of certain AI systems",
+        "51": "Classification of general-purpose AI models as general-purpose AI models with systemic risk",
+        "52": "Procedure",
+        "53": "Obligations for providers of general-purpose AI models",
+        "54": "Authorised representatives of providers of general-purpose AI models",
+        "55": "Obligations of providers of general-purpose AI models with systemic risk",
+        "72": "Post-market monitoring by providers and post-market monitoring plan for high-risk AI systems",
+        "73": "Reporting of serious incidents"
+      }
+    },
+    "dora": {
+      "celex": "32022R2554",
+      "uri": "http://publications.europa.eu/resource/celex/32022R2554",
+      "headings": {
+        "5": "Governance and organisation",
+        "6": "ICT risk management framework",
+        "9": "Protection and prevention",
+        "10": "Detection",
+        "11": "Response and recovery",
+        "12": "Backup policies and procedures, restoration and recovery procedures and methods",
+        "17": "ICT-related incident management process",
+        "18": "Classification of ICT-related incidents and cyber threats",
+        "19": "Reporting of major ICT-related incidents and voluntary notification of significant cyber threats",
+        "24": "General requirements for the performance of digital operational resilience testing",
+        "25": "Testing of ICT tools and systems",
+        "26": "Advanced testing of ICT tools, systems and processes based on TLPT",
+        "27": "Requirements for testers for the carrying out of TLPT",
+        "28": "General principles",
+        "29": "Preliminary assessment of ICT concentration risk at entity level",
+        "30": "Key contractual provisions"
+      }
+    }
+  },
+  "_context_note": "A topic may add words the heading does not carry only where the heading is a cross-reference or bare, and the addition is context from the surrounding structure rather than a different subject. Each such case is declared below with its reason; anything undeclared fails the build. This list is where a wrong label would otherwise hide.",
+  "context_allowed": {
+    "eu_ai_act": {
+      "annex-III": {
+        "terms": [
+          "classification",
+          "list"
+        ],
+        "reason": "The heading is a cross-reference to Article 6(2). The annex is the list that rule classifies against."
+      },
+      "annex-IV": {
+        "terms": [
+          "contents"
+        ],
+        "reason": "The heading is a cross-reference to Article 11(1). The annex sets out what that documentation must contain."
+      },
+      "72": {
+        "terms": [
+          "system"
+        ],
+        "reason": "The heading names the plan; the article establishes the post-market monitoring system the plan belongs to."
+      }
+    },
+    "dora": {
+      "28": {
+        "terms": [
+          "ict",
+          "third-party",
+          "risk",
+          "sound",
+          "management"
+        ],
+        "reason": "The heading is the bare words 'General principles'. The context comes from the section it opens, 'Key principles for a sound management of ICT third-party risk' — without it the topic says nothing. The earlier label used that context ALONE and so described the chapter instead of the article."
+      }
+    }
+  }
+}

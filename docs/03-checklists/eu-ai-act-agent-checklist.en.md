@@ -15,7 +15,7 @@ logging/documentation — and points to where each maps in the EU AI Act (Regula
 > **Source lock.** The article references below point at **Regulation (EU) 2024/1689** (CELEX 32024R1689, OJ L, 2024/1689, 12.7.2024) — consolidated text 02024R1689-20260727, as of 2026-07-27.
 > Amended by **Regulation (EU) 2026/1744** (CELEX 32026R1744, OJ L, 2026/1744, 24.7.2026), in force 2026-07-27.
 > Digital Omnibus on AI. It moves application dates: the high-risk obligations for standalone systems now apply from 2 December 2027, and for high-risk AI embedded in products already covered by Union product legislation from 2 August 2028. The transparency obligations and the AI-literacy duty are unchanged. Which dates bind you is a legal question this toolkit does not answer — but a checklist read without this note reads as if every row below were already in force.
-> Last checked against the text on 2026-08-14: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727). Pinned in [`regulatory-sources.md`](regulatory-sources.md).
+> Last checked against the text on 2026-08-25: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727). Pinned in [`regulatory-sources.md`](regulatory-sources.md).
 > This records **which text**, not what it requires of you.
 <!-- GENERATED:source_lock END -->
 

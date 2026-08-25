@@ -76,6 +76,34 @@ All notable changes to this project are documented here. The format follows
 
 ### Fixed
 
+- **`owner_verified` is true, and it means something checkable.** Every cited article heading was
+  compared against the primary text — not against a rendering of it — retrieved from the
+  **Publications Office Cellar repository** with `Accept: application/xhtml+xml` and
+  `Accept-Language: eng`. That detour matters: the EUR-Lex web pages answer automated requests with
+  HTTP 202 and an empty body, so an earlier pass the same day had to fall back on secondary
+  renderings and correctly refused to call itself verification.
+
+  **Seven topics were wrong and are corrected.** The substantive one: the AI Act's Article 13 was
+  labelled "instructions for use", which is one obligation inside an article about transparency and
+  provision of information to deployers — every statement derived from that reference inherited the
+  mistake. DORA's Article 28 described the chapter it sits in rather than the article. Articles 18
+  and 19 each dropped half a heading, one of them a whole obligation. The full before-and-after is
+  in `VERIFICATION.md`.
+
+  **The check is committed, not recounted.** `official_headings.json` holds the headings,
+  `scripts/refresh-official-headings.sh` re-derives them from the live source, and four tests fail
+  the build if a topic starts claiming something the heading does not carry. Re-running the refresh
+  reproduces the committed file byte for byte. Four topics legitimately add context — two annex
+  headings are cross-references, Article 72 names the plan rather than the system, and DORA's
+  Article 28 heading is the bare words "General principles" — and each is declared with a reason,
+  with a further test that fails when a declared exception is no longer needed.
+
+  One existing rule was widened rather than worked around: `test_provenance_of_the_provenance_is_recorded`
+  required every source to be an EUR-Lex URL. Cellar is the same Publications Office repository
+  EUR-Lex serves from and the only one a machine can read, so it is now accepted — and a new test
+  refuses to let `owner_verified` stand without a source something could actually have read.
+
+
 - **The checklists read as if deferred obligations were already in force.** Regulation (EU)
   2026/1744 — the Digital Omnibus on AI, in force since 27 July 2026 — moved the high-risk
   application dates to 2 December 2027 for standalone systems and 2 August 2028 for high-risk AI

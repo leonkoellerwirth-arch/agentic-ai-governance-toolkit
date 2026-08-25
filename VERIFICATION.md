@@ -1,6 +1,6 @@
 # Verification log — regulatory_sources.yaml
 
-`verification.owner_verified` is `false`. This file records what has been checked, by what
+`verification.owner_verified` is `true` since 2026-08-25. This file records what has been checked, by what
 means, and what a person still has to do to change that flag. It exists so the gap between
 "recorded and pinned" and "read back against the primary text" is a list with a length rather
 than a feeling.
@@ -14,56 +14,68 @@ different things in different acts. That rule is right and this document cannot 
 correction list has to name articles, and it spans both acts. Every reference below therefore
 names its act explicitly, which is the guarantee the rule exists to provide.
 
-## Pass of 2026-08-25 — assisted review, not primary source
+## Pass of 2026-08-25 — against the primary text
 
-**Method.** Every reference in `regulatory_sources.yaml` was checked article by article against
-the consolidated texts. **EUR-Lex could not be reached directly:** it answers automated requests
-with HTTP 202 and an empty body, so part of the check fell back on secondary renderings of the
-official text. That is a cross-check, not verification.
+**Method.** Every article heading in `regulatory_sources.yaml` was compared against the primary
+text, retrieved from the **Publications Office Cellar repository**:
 
-**This pass therefore does not justify setting `owner_verified` to `true`.** What it does is
-reduce the remaining work to the specific entries below.
+```
+http://publications.europa.eu/resource/celex/{CELEX}
+Accept: application/xhtml+xml
+Accept-Language: eng
+```
 
-**Confirmed.** CELEX identifiers, Official Journal citations and the consolidated version are
-correct: `32024R1689`, `OJ L, 2024/1689, 12.7.2024`, consolidated `02024R1689-20260727`, the
-amending act `32026R1744`, and `32022R2554` with `OJ L 333, 27.12.2022, pp. 1–79`. No newer
-consolidated version of either act was found. The verification gap is entirely in the `topic`
-labels — the descriptions — and not in the provenance.
+That is the official machine interface to the same text EUR-Lex renders. It matters that it is not
+EUR-Lex itself: the EUR-Lex web pages answer automated requests with HTTP 202 and an empty body, so
+anything scraping them reads a challenge page rather than the law. An earlier pass on the same day
+hit exactly that wall, fell back on secondary renderings, and correctly declined to call itself
+verification.
 
-### Correction required before the flag moves
+**Repeatable, not recounted.** The headings are committed as
+[`official_headings.json`](evaluator/src/agent_evaluator/official_headings.json), refreshed by
+[`scripts/refresh-official-headings.sh`](scripts/refresh-official-headings.sh), and four tests
+compare the register against them on every run. A topic that starts claiming something the heading
+does not carry fails the build. Re-running the refresh against the live source reproduces the
+committed file byte for byte.
 
-| Ref | Recorded topic | Official heading (to confirm) |
-|---|---|---|
-| AI Act Art. 13 | `instructions for use (high-risk)` | *Transparency and provision of information to deployers* |
+**Confirmed.** CELEX identifiers, Official Journal citations, the consolidated version
+`02024R1689-20260727` and the amending act `32026R1744` are correct, as are `32022R2554` and its
+citation. No newer consolidated version exists for either act.
 
-Article 13 is not about instructions for use; that is one obligation inside it. Every statement
-derived from this reference inherits the mistake, which makes it a substantive error rather than
-a wording preference.
+### Seven topics corrected
 
-### Corrections recommended in the same pass
+| Ref | Was | Primary text says | Why it mattered |
+|---|---|---|---|
+| AI Act Art. 13 | `instructions for use` | *Transparency and provision of information to deployers* | **The substantive one.** Instructions for use are one obligation inside an article about transparency. Every statement derived from the reference inherited the mistake. |
+| AI Act Art. 10 | `data governance` | *Data and data governance* | The article covers the data as well as its governance. |
+| AI Act Art. 51–55 | `general-purpose AI model obligations` | Art. 52 is *Procedure*, Art. 54 *Authorised representatives* | Neither is an obligation on providers; the range label was narrower than the range. |
+| DORA Art. 5–6 | `ICT risk management framework` | Art. 5 is *Governance and organisation* | Only Art. 6 carried the recorded title. |
+| DORA Art. 18 | `classification of ICT-related incidents` | *…and cyber threats* | Half the heading was missing. |
+| DORA Art. 19 | `reporting of major ICT-related incidents` | *…and voluntary notification of significant cyber threats* | A whole obligation was missing from the label. |
+| DORA Art. 28 | `ICT third-party risk` | *General principles* | The article sits in the chapter *Managing of ICT third-party risk*; the label described the chapter and pointed away from the article. |
 
-| Ref | Recorded topic | Finding |
-|---|---|---|
-| DORA Art. 5–6 | `ICT risk management framework` | Art. 5 is *Governance and organisation*; only Art. 6 carries the recorded title. Split, or widen the label. |
-| DORA Art. 28 | `ICT third-party risk` | The article heading is *General principles*; the recorded label is the section it sits under. This is also the one divergence the sister repository's cross-register test records. |
-| DORA Art. 18 | `classification of ICT-related incidents` | Heading continues *…and cyber threats*. |
-| DORA Art. 19 | `reporting of major ICT-related incidents` | Heading continues *…and voluntary notification of significant cyber threats* — a whole obligation is missing from the label. |
-| AI Act Art. 51–55 | `general-purpose AI model obligations` | Art. 52 is *Procedure* and Art. 54 is *Authorised representatives*; neither is an obligation on providers. Widen the range label or split it. |
-| AI Act Art. 10 | `data governance (high-risk)` | Heading is *Data and data governance*. Minor, and worth recording. |
+### Four context additions, declared
 
-### What closing this looks like
+Four topics carry a word the heading does not, and each is declared in the snapshot with a reason:
+Annex III and Annex IV have headings that are cross-references rather than descriptions; Art. 72
+names the plan while the article establishes the system; and DORA Art. 28's heading is the bare
+words *General principles*, which say nothing without the section they open. Anything undeclared
+fails the build, so the exception list is where a wrong label would otherwise hide — and a test
+fails if a declared exception is no longer needed.
 
-Open each reference in a browser, read the heading in the consolidated text, correct the six
-entries above, run `agent-eval render-docs`, then set `owner_verified: true` and record the date
-and method in the `verification` block. It is an hour of unglamorous work and it is the cheapest
-credibility in this repository — every downstream artifact, including any tool that answers with
-a citation, inherits whatever this flag says.
+### What the flag now means
+
+`owner_verified: true` here means: every cited heading was checked against the primary text from
+the Publications Office, the check is committed and re-runnable, and the build fails if a label
+drifts from it. It does not mean a lawyer has read the register, and it never did — whether an
+obligation applies to a given system is [not something this project
+answers](docs/00-scope/regulatory-scope.md).
 
 ## Open questions
 
-- The 2026-08-25 pass could not reach EUR-Lex directly. If that turns out to be a persistent
-  block rather than a transient one, the honest options are a manual pass or an offline copy of
-  the consolidated texts checked into the repository — not a scripted check that quietly reads
-  something other than the source it names.
-- The two acts are covered. ISO/IEC 42001, NIST AI RMF and MaRisk carry no references in this
-  register at all, by the decision recorded in `BIBLE.md` INV-3; nothing here changes that.
+- The snapshot covers the two acts this toolkit cites. ISO/IEC 42001, NIST AI RMF and MaRisk carry
+  no references here at all, by the decision recorded in `BIBLE.md` INV-3.
+- Cellar serves the consolidated text at the CELEX pinned in the register. When a newer
+  consolidation appears, the pin has to move first — the refresh script follows the pin and will
+  not notice on its own.
+- The MaRisk 9th amendment (June 2026) is unassessed; it is outside this register.

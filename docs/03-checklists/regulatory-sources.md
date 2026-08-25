@@ -43,15 +43,15 @@ if this page carries one no checklist cites.
 | 6 | high-risk classification |
 | annex-III | high-risk classification list |
 | 9 | risk management (high-risk) |
-| 10 | data governance (high-risk) |
+| 10 | data and data governance (high-risk) |
 | 11 | technical documentation (high-risk) |
 | annex-IV | technical documentation contents |
 | 12 | record-keeping (high-risk) |
-| 13 | instructions for use (high-risk) |
+| 13 | transparency and provision of information to deployers (high-risk) |
 | 14 | human oversight (high-risk) |
 | 15 | accuracy, robustness and cybersecurity (high-risk) |
 | 50 | transparency obligations |
-| 51-55 | general-purpose AI model obligations |
+| 51-55 | general-purpose AI models — classification, procedure, obligations, authorised representatives |
 | 72 | post-market monitoring system (high-risk) |
 | 73 | reporting of serious incidents (high-risk) |
 
@@ -72,28 +72,31 @@ if this page carries one no checklist cites.
 
 | Article | Subject as the checklist names it |
 |---|---|
-| 5-6 | ICT risk management framework |
+| 5-6 | governance and organisation; ICT risk management framework |
 | 9 | protection and prevention |
 | 10 | detection |
 | 11 | response and recovery |
 | 12 | backup and restoration |
 | 17 | ICT-related incident management process |
-| 18 | classification of ICT-related incidents |
-| 19 | reporting of major ICT-related incidents |
+| 18 | classification of ICT-related incidents and cyber threats |
+| 19 | reporting of major ICT-related incidents and voluntary notification of significant cyber threats |
 | 24-27 | digital operational resilience testing |
-| 28 | ICT third-party risk |
+| 28 | general principles for sound management of ICT third-party risk |
 | 30 | key contractual provisions |
 <!-- GENERATED:registry END -->
 
 ## How these entries were checked
 
 <!-- GENERATED:verification START — edit regulatory_sources.yaml, then run `agent-eval render-docs` -->
-Checked on **2026-08-14** — fetched from EUR-Lex and read off the document metadata. Entries are **not yet** confirmed by eye against the sources below.
+Checked on **2026-08-25** — Every article heading below was compared against the primary text, retrieved from the Publications Office Cellar repository — http://publications.europa.eu/resource/celex/{CELEX} with Accept: application/xhtml+xml and Accept-Language: eng. This is the official machine interface to the same text EUR-Lex renders; the EUR-Lex web pages answer automated requests with an empty body, which is why an earlier pass had to fall back on secondary renderings and could not be called verification.
+The headings are committed as official_headings.json and a test compares this register against them, so the check is repeatable rather than a claim about one afternoon. Seven topics were corrected in that pass; what each one said before and what the primary text says is recorded in VERIFICATION.md.. Entries are confirmed by the maintainer by eye against the sources below.
 
 - <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689>
 - <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727>
 - <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1744>
 - <https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554>
+- <http://publications.europa.eu/resource/celex/02024R1689-20260727>
+- <http://publications.europa.eu/resource/celex/32022R2554>
 
 Commentary — law-firm notes, news articles, summaries, AI-generated review — is never the source of an entry here. Several articles repeating one Official Journal publication are one source, not several.
 <!-- GENERATED:verification END -->

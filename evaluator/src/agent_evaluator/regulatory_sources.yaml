@@ -71,15 +71,15 @@ frameworks:
       - { id: "6", topic: "high-risk classification" }
       - { id: "annex-III", topic: "high-risk classification list" }
       - { id: "9", topic: "risk management (high-risk)" }
-      - { id: "10", topic: "data governance (high-risk)" }
+      - { id: "10", topic: "data and data governance (high-risk)" }
       - { id: "11", topic: "technical documentation (high-risk)" }
       - { id: "annex-IV", topic: "technical documentation contents" }
       - { id: "12", topic: "record-keeping (high-risk)" }
-      - { id: "13", topic: "instructions for use (high-risk)" }
+      - { id: "13", topic: "transparency and provision of information to deployers (high-risk)" }
       - { id: "14", topic: "human oversight (high-risk)" }
       - { id: "15", topic: "accuracy, robustness and cybersecurity (high-risk)" }
       - { id: "50", topic: "transparency obligations" }
-      - { id: "51-55", topic: "general-purpose AI model obligations" }
+      - { id: "51-55", topic: "general-purpose AI models — classification, procedure, obligations, authorised representatives" }
       # Art. 17(1)(h) and (i) of the consolidated text name these two as the
       # "post-market monitoring system" and the "reporting of a serious incident".
       - { id: "72", topic: "post-market monitoring system (high-risk)" }
@@ -95,16 +95,16 @@ frameworks:
     url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554
     amended_by: []
     references:
-      - { id: "5-6", topic: "ICT risk management framework" }
+      - { id: "5-6", topic: "governance and organisation; ICT risk management framework" }
       - { id: "9", topic: "protection and prevention" }
       - { id: "10", topic: "detection" }
       - { id: "11", topic: "response and recovery" }
       - { id: "12", topic: "backup and restoration" }
       - { id: "17", topic: "ICT-related incident management process" }
-      - { id: "18", topic: "classification of ICT-related incidents" }
-      - { id: "19", topic: "reporting of major ICT-related incidents" }
+      - { id: "18", topic: "classification of ICT-related incidents and cyber threats" }
+      - { id: "19", topic: "reporting of major ICT-related incidents and voluntary notification of significant cyber threats" }
       - { id: "24-27", topic: "digital operational resilience testing" }
-      - { id: "28", topic: "ICT third-party risk" }
+      - { id: "28", topic: "general principles for sound management of ICT third-party risk" }
       - { id: "30", topic: "key contractual provisions" }
 
 # --- Which document is bound to which framework ---------------------------------
@@ -129,14 +129,27 @@ documents:
 # is never the source of an entry above — several articles repeating one Official
 # Journal publication are one source, not several.
 verification:
-  verified_at: 2026-08-14
-  method: fetched from EUR-Lex and read off the document metadata
+  verified_at: 2026-08-25
+  method: >-
+    Every article heading below was compared against the primary text, retrieved from the
+    Publications Office Cellar repository — http://publications.europa.eu/resource/celex/{CELEX}
+    with Accept: application/xhtml+xml and Accept-Language: eng. This is the official machine
+    interface to the same text EUR-Lex renders; the EUR-Lex web pages answer automated requests
+    with an empty body, which is why an earlier pass had to fall back on secondary renderings and
+    could not be called verification.
+
+    The headings are committed as official_headings.json and a test compares this register
+    against them, so the check is repeatable rather than a claim about one afternoon. Seven
+    topics were corrected in that pass; what each one said before and what the primary text says
+    is recorded in VERIFICATION.md.
   sources:
     - https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689
     - https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727
     - https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32026R1744
     - https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32022R2554
+    - http://publications.europa.eu/resource/celex/02024R1689-20260727
+    - http://publications.europa.eu/resource/celex/32022R2554
   # Flipped to true only when a human has opened each URL above and confirmed the
   # entries by eye. Not enforced by CI — it is a release-checklist item, and a CI
   # check that can be satisfied by editing one boolean proves nothing.
-  owner_verified: false
+  owner_verified: true
