@@ -34,7 +34,7 @@ from .regulatory import load_sources
 SCHEMA = (
     "https://github.com/leonkoellerwirth-arch/agentic-ai-governance-toolkit/legal-status-record"
 )
-SCHEMA_VERSION = "1.2.0"
+SCHEMA_VERSION = "1.3.0"
 
 Status = Literal["current", "superseded", "unchecked"]
 
@@ -217,6 +217,7 @@ def build_record(prepared_for: str = "") -> dict[str, Any]:
         "prepared_on": date.today().isoformat(),
         "prepared_for": prepared_for or None,
         "register": None,
+        "excluded": [],
         "source": snapshot.get("_source", "not recorded"),
         "source_id": ENDPOINT,
         "source_checked_on": checked,
@@ -246,6 +247,11 @@ def build_record(prepared_for: str = "") -> dict[str, Any]:
                 "A check that could not reach the source is recorded as unchecked, never as "
                 "current."
             ),
+            "on_exclusions": (
+                "An act recorded as deliberately excluded is the register holder's decision, "
+                "taken on the date of the record. Nothing here re-checks whether the reason still "
+                "holds, and an exclusion is never version-checked."
+            ),
         },
     }
 
@@ -273,6 +279,9 @@ WORDS: dict[str, dict[str, str]] = {
         "watched": "Watched: {watched}.",
         "not_covered": "Not covered:",
         "absence": "## What an absence of findings means",
+        "excluded_head": "## What was deliberately left out",
+        "excluded_line": "- **{act}**{celex} — {why_not}",
+        "revisit": "  - Belongs in the register again when: {when}",
     },
     "de": {
         "title": "Rechtsstandsbeleg",
@@ -297,6 +306,9 @@ WORDS: dict[str, dict[str, str]] = {
         "watched": "Beobachtet: {watched}.",
         "not_covered": "Nicht erfasst:",
         "absence": "## Was ein Ausbleiben von Befunden bedeutet",
+        "excluded_head": "## Was bewusst nicht im Register steht",
+        "excluded_line": "- **{act}**{celex} — {why_not}",
+        "revisit": "  - Gehört wieder hinein, sobald: {when}",
     },
 }
 
@@ -313,6 +325,11 @@ SCOPE_DE = {
         "Eine Prüfung, welche die Quelle nicht erreichen konnte, wird als ungeprüft erfasst, nie "
         "als aktuell."
     ),
+    "on_exclusions": (
+        "Ein als bewusst ausgeschlossen erfasster Rechtsakt ist eine Entscheidung des "
+        "Registerführers, getroffen zum Datum des Belegs. Nichts hier prüft nach, ob ihr Grund "
+        "noch trägt, und ein Ausschluss wird nie auf seine Fassung geprüft."
+    ),
 }
 
 
@@ -325,6 +342,7 @@ def _scope_de(record: dict[str, Any]) -> dict[str, Any]:
         "not_covered": [NOT_COVERED_DE[item] for item in record["scope"]["not_covered"]],
         "meaning_of_no_finding": SCOPE_DE["meaning_of_no_finding"],
         "on_source_failure": SCOPE_DE["on_source_failure"],
+        "on_exclusions": SCOPE_DE["on_exclusions"],
     }
 
 
@@ -394,6 +412,20 @@ def render_markdown(record: dict[str, Any], lang: str = "en") -> str:
         "",
     ]
     lines += [f"- {item}" for item in scope["not_covered"]]
+    excluded = record.get("excluded") or []
+    if excluded:
+        lines += ["", w["excluded_head"], ""]
+        for item in excluded:
+            lines.append(
+                w["excluded_line"].format(
+                    act=item["act"],
+                    celex=f" ({item['celex']})" if item.get("celex") else "",
+                    why_not=item["why_not"],
+                )
+            )
+            if item.get("revisit_when"):
+                lines.append(w["revisit"].format(when=item["revisit_when"]))
+
     lines += [
         "",
         w["absence"],
@@ -401,8 +433,11 @@ def render_markdown(record: dict[str, Any], lang: str = "en") -> str:
         scope["meaning_of_no_finding"],
         "",
         scope["on_source_failure"],
-        "",
     ]
+    if excluded:
+        lines.append("")
+        lines.append(scope["on_exclusions"])
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -434,6 +469,16 @@ class ProfileError(ValueError):
 
 
 @dataclass(frozen=True)
+class Exclusion:
+    """An act deliberately left out. A register that cannot say so is a list with a gap in it."""
+
+    act: str
+    why_not: str
+    celex: str | None = None
+    revisit_when: str | None = None
+
+
+@dataclass(frozen=True)
 class RegisterEntry:
     key: str
     act: str
@@ -447,7 +492,9 @@ def consolidated_base(celex: str) -> str:
     return "0" + celex[1:]
 
 
-def load_profile(path: str | Path) -> tuple[list[RegisterEntry], dict[str, Any]]:
+def load_profile(
+    path: str | Path,
+) -> tuple[list[RegisterEntry], list[Exclusion], dict[str, Any]]:
     """Read a register file. Returns its entries and the block that identifies it in the record."""
     import yaml
 
@@ -499,13 +546,39 @@ def load_profile(path: str | Path) -> tuple[list[RegisterEntry], dict[str, Any]]
     if not entries:
         raise ProfileError(f"{file}: the register lists no acts.")
 
+    exclusions: list[Exclusion] = []
+    for index, item in enumerate(document.get("excluded") or [], start=1):
+        where = f"{file}: exclusion {index}"
+        if not isinstance(item, dict):
+            raise ProfileError(f"{where} is not a mapping.")
+        missing = [f for f in ("act", "why_not") if not str(item.get(f) or "").strip()]
+        if missing:
+            raise ProfileError(f"{where} is missing {', '.join(missing)}.")
+        celex = str(item.get("celex") or "").strip() or None
+        if celex is not None:
+            if not CELEX.fullmatch(celex):
+                raise ProfileError(f"{where}: {celex!r} is not a CELEX identifier of a legal act.")
+            if celex in seen_celex:
+                # Watched and deliberately not watched are not both true of the same act. Rendering
+                # the contradiction would leave the reader to pick which half to believe.
+                raise ProfileError(f"{where}: {celex} is both listed and excluded.")
+        exclusions.append(
+            Exclusion(
+                str(item["act"]).strip(),
+                str(item["why_not"]).strip(),
+                celex,
+                str(item.get("revisit_when") or "").strip() or None,
+            )
+        )
+
     block = {
         "name": str(document.get("register") or file.stem),
         "file": file.name,
         "sha256": hashlib.sha256(raw).hexdigest(),
         "entries": len(entries),
+        "exclusions": len(exclusions),
     }
-    return entries, block
+    return entries, exclusions, block
 
 
 def live_resolver(retries: int = 4, backoff: float = 4.0, sleep=time.sleep) -> Resolver:
@@ -584,7 +657,7 @@ def build_profile_record(
     path: str | Path, prepared_for: str = "", resolve: Resolver | None = None
 ) -> dict[str, Any]:
     """The same record, for a register the reader supplies rather than the one we cite."""
-    entries, block = load_profile(path)
+    entries, exclusions, block = load_profile(path)
     statuses_ = profile_statuses(entries, resolve or live_resolver())
     record = build_record(prepared_for)
     record["register"] = block
@@ -605,6 +678,16 @@ def build_profile_record(
             "why_stated_by": "the register holder; not verified by this tool",
         }
         for e in statuses_
+    ]
+    record["excluded"] = [
+        {
+            "act": e.act,
+            "celex": e.celex,
+            "why_not": e.why_not,
+            "revisit_when": e.revisit_when,
+            "decided_by": "the register holder; not verified and not monitored by this tool",
+        }
+        for e in exclusions
     ]
     record["scope"]["watched"] = (
         f"the consolidated versions of the {len(entries)} acts listed above, and nothing else"

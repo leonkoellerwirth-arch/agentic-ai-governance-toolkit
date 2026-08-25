@@ -76,6 +76,18 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **What was deliberately left out** (`excluded:` in a register file): a register that cannot say
+  what it excluded is a list with a gap in it — a reader cannot tell an act that was considered and
+  dropped from one nobody thought of. Each exclusion needs a reason; `revisit_when` records the
+  condition that would bring it back.
+
+  An exclusion is **never version-checked**: reporting currency for an act the register does not
+  claim to watch is the same false comfort in a smaller frame. And an exclusion is a decision with
+  a date on it, not a finding — the reason can go stale (an Ecodesign exclusion resting on "no
+  delegated act yet" fails the day one appears), so the record states that nothing re-checks
+  whether the reason still holds. An act listed as both watched and excluded is refused rather
+  than rendered, because a reader should not have to pick which half to believe.
+
 - **The record in German** (`agent-eval legal-status --lang de`): a finding a reader acts on is a
   sentence, and a sentence exists in one language. Storing only English prose would make a German
   record a translation of output rather than a rendering of a finding, so a finding now carries a

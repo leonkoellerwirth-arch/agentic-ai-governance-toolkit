@@ -32,3 +32,21 @@ acts:
     why: >-
       Replace this too. An act nobody can say a reason for does not belong in a register somebody
       is relying on.
+
+# What you deliberately left out. Optional, and the part most registers are missing.
+#
+# A register that cannot say what it excluded is a list with a gap in it: a reader cannot tell an
+# act that was considered and dropped from one nobody thought of. An exclusion needs a reason;
+# `revisit_when` records the condition that would bring it back.
+#
+# An exclusion is never version-checked, and nothing re-checks whether its reason still holds. The
+# record says both in its own words — an exclusion is a decision with a date on it, not a finding.
+
+excluded:
+  - act: Verordnung (EU) 2023/988 (Produktsicherheit)
+    celex: 32023R0988
+    why_not: >-
+      Replace this with your own reason for leaving the act out — the reason, not the act's
+      subject matter.
+    revisit_when: >-
+      Replace this with the condition that would put it back in the register.

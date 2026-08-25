@@ -136,7 +136,7 @@ def test_the_same_act_cannot_be_listed_twice(tmp_path):
 
 def test_an_unreachable_source_is_unchecked_never_current(tmp_path):
     """The one failure mode that turns this record from evidence into false comfort."""
-    entries, _ = ls.load_profile(_register(tmp_path))
+    entries, _, _ = ls.load_profile(_register(tmp_path))
     statuses = ls.profile_statuses(entries, _fixed({}))
     assert {s.status for s in statuses} == {"unchecked"}
     assert all("could not be reached" in s.note for s in statuses)
@@ -245,3 +245,81 @@ def test_the_german_record_carries_no_english_scaffolding(tmp_path):
 def test_an_unknown_language_is_refused_not_silently_english():
     with pytest.raises(ValueError, match="no rendering"):
         ls.render_markdown(ls.build_record(), "fr")
+
+
+# --- What was deliberately left out ------------------------------------------------------------
+
+EXCLUDED = """
+excluded:
+  - act: Verordnung (EU) 2023/988 (Produktsicherheit)
+    celex: 32023R0988
+    why_not: Greift subsidiär für Verbraucherprodukte; der Vertrieb ist rein B2B.
+    revisit_when: Maschinen auch an Verbraucher abgegeben werden.
+  - act: ATEX-Richtlinie 2014/34/EU
+    why_not: Nur bei Geräten für explosionsgefährdete Bereiche.
+"""
+
+
+def test_an_exclusion_without_a_reason_is_refused(tmp_path):
+    """An act dropped without a recorded reason is indistinguishable from one nobody thought of."""
+    text = MACHINERY + EXCLUDED.replace(
+        "    why_not: Nur bei Geräten für explosionsgefährdete Bereiche.\n", ""
+    )
+    with pytest.raises(ls.ProfileError, match="missing why_not"):
+        ls.load_profile(_register(tmp_path, text))
+
+
+def test_an_act_cannot_be_both_watched_and_excluded(tmp_path):
+    """Rendering the contradiction would leave the reader to pick which half to believe."""
+    text = MACHINERY + EXCLUDED.replace("32023R0988", "32024R1689")
+    with pytest.raises(ls.ProfileError, match="both listed and excluded"):
+        ls.load_profile(_register(tmp_path, text))
+
+
+def test_an_exclusion_is_never_version_checked(tmp_path):
+    """Checking it would report currency for an act the register does not claim to watch."""
+    record = ls.build_profile_record(
+        _register(tmp_path, MACHINERY + EXCLUDED),
+        resolve=_fixed({"02023R1230": [], "02024R1689": []}),
+    )
+    assert {a["celex"] for a in record["acts"]} == {"32023R1230", "32024R1689"}
+    assert len(record["excluded"]) == 2
+    assert all("status" not in e for e in record["excluded"])
+
+
+def test_the_record_says_an_exclusion_is_a_decision_nobody_re_checks(tmp_path):
+    """An exclusion can go stale — Ökodesign binds the day a delegated act appears."""
+    record = ls.build_profile_record(
+        _register(tmp_path, MACHINERY + EXCLUDED),
+        resolve=_fixed({"02023R1230": [], "02024R1689": []}),
+    )
+    assert "not monitored" in record["excluded"][0]["decided_by"]
+    for lang, phrase in (
+        ("en", "re-checks whether the reason still holds"),
+        ("de", "prüft nach, ob ihr Grund noch trägt"),
+    ):
+        assert phrase in ls.render_markdown(record, lang)
+
+
+def test_the_exclusions_are_shown_in_both_languages(tmp_path):
+    record = ls.build_profile_record(
+        _register(tmp_path, MACHINERY + EXCLUDED),
+        resolve=_fixed({"02023R1230": [], "02024R1689": []}),
+    )
+    english = ls.render_markdown(record, "en")
+    german = ls.render_markdown(record, "de")
+    assert "## What was deliberately left out" in english
+    assert "## Was bewusst nicht im Register steht" in german
+    assert "(32023R0988)" in german
+    assert "Gehört wieder hinein, sobald:" in german
+
+
+def test_a_record_without_exclusions_says_nothing_about_them(tmp_path):
+    """Silence is right here: a register that excluded nothing must not imply it considered any."""
+    record = ls.build_profile_record(
+        _register(tmp_path), resolve=_fixed({"02023R1230": [], "02024R1689": []})
+    )
+    assert record["excluded"] == []
+    for lang in ls.LANGUAGES:
+        rendered = ls.render_markdown(record, lang)
+        assert ls.WORDS[lang]["excluded_head"] not in rendered
