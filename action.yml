@@ -10,6 +10,11 @@
 # action ref and the commit under test. A reviewer can read the summary; an auditor can read
 # the JSON. Neither has to trust a screenshot.
 #
+# This action is a thin wrapper around scripts/governance-gate.sh. The logic lives in the script
+# so it runs offline, in any CI, or in a pre-commit hook, and so CI and the local run cannot drift
+# (CONSTITUTION §4). If you have no GitHub Actions budget, call the script directly — nothing here
+# is required.
+#
 # Zero-trust: the one external action is pinned to a full commit SHA, matching ci.yml.
 # Not legal advice — see DISCLAIMER.md.
 
@@ -96,102 +101,31 @@ runs:
         EVIDENCE: ${{ inputs.evidence-path }}
         FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
       run: |
-        # errexit off, deliberately: GitHub runs composite `run:` steps with `bash -e`, which
-        # would kill this script on the first check that reports a finding — before
-        # fail-on-findings is ever consulted. This script inspects exit codes itself.
         set +e
         set -uo pipefail
-        mkdir -p "$EVIDENCE"
-        failed=0
-        ran=0
+        args=(--evidence "$EVIDENCE" --summary "$GITHUB_STEP_SUMMARY")
+        [ -z "$IN_READINESS" ]  || args+=(--readiness "$IN_READINESS")
+        [ -z "$IN_ASSESSMENT" ] || args+=(--assessment "$IN_ASSESSMENT")
+        [ -z "$IN_LOGS" ]       || args+=(--logs "$IN_LOGS")
+        [ -z "$IN_POLICY" ]     || args+=(--policy "$IN_POLICY")
+        [ "$FAIL_ON_FINDINGS" != "false" ] || args+=(--no-fail)
 
-        version="$(agent-eval --version)"
-        {
-          echo "## Governance Gate"
-          echo
-          echo "| | |"
-          echo "|---|---|"
-          echo "| Evaluator | \`$version\` |"
-          echo "| Commit | \`$GITHUB_SHA\` |"
-          echo "| Run | \`$GITHUB_RUN_ID\` |"
-          echo "| Timestamp (UTC) | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
-          echo
-        } >> "$GITHUB_STEP_SUMMARY"
+        "$GITHUB_ACTION_PATH/scripts/governance-gate.sh" "${args[@]}"
+        rc=$?
 
-        # $1 label · $2 evidence basename · rest: agent-eval argv
-        check() {
-          local label="$1" name="$2"; shift 2
-          ran=$((ran + 1))
-          echo "::group::$label"
-          agent-eval "$@" --json > "$EVIDENCE/$name.json" 2> "$EVIDENCE/$name.err"
-          local rc=$?
-          # --json writes the report to stdout and still exits non-zero on a finding, so the
-          # evidence file is complete either way. A non-empty .err means the command itself
-          # failed (bad input, missing file) — that is a gate failure too, not a clean pass.
-          cat "$EVIDENCE/$name.json" 2>/dev/null || true
-          cat "$EVIDENCE/$name.err" >&2 2>/dev/null || true
-          echo "::endgroup::"
-
-          if [ "$rc" -eq 0 ]; then
-            echo "### ✅ $label" >> "$GITHUB_STEP_SUMMARY"
-            echo "No findings." >> "$GITHUB_STEP_SUMMARY"
+        # rc 2 is a misconfiguration and never a pass. rc 1 means findings; with --no-fail the
+        # script already exited 0, so reaching here with 1 means the gate is meant to block.
+        if [ "$rc" -eq 0 ]; then
+          # --no-fail exits 0 even with findings; read the summary to report `passed` honestly.
+          if grep -q '^### ❌' "$GITHUB_STEP_SUMMARY" 2>/dev/null; then
+            echo "passed=false" >> "$GITHUB_OUTPUT"
           else
-            failed=1
-            echo "### ❌ $label" >> "$GITHUB_STEP_SUMMARY"
-            echo '```json' >> "$GITHUB_STEP_SUMMARY"
-            head -c 8000 "$EVIDENCE/$name.json" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
-            echo >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-            if [ -s "$EVIDENCE/$name.err" ]; then
-              echo '```' >> "$GITHUB_STEP_SUMMARY"
-              head -c 2000 "$EVIDENCE/$name.err" >> "$GITHUB_STEP_SUMMARY"
-              echo >> "$GITHUB_STEP_SUMMARY"
-              echo '```' >> "$GITHUB_STEP_SUMMARY"
-            fi
+            echo "passed=true" >> "$GITHUB_OUTPUT"
           fi
-          echo >> "$GITHUB_STEP_SUMMARY"
-        }
-
-        need_policy() {
-          if [ -z "$IN_POLICY" ]; then
-            echo "::error::input '$1' requires 'policy' to be set"
-            exit 2
-          fi
-        }
-
-        [ -n "$IN_READINESS" ] && check "Organizational readiness" readiness \
-          readiness --input "$IN_READINESS"
-
-        if [ -n "$IN_ASSESSMENT" ]; then
-          need_policy assessment
-          check "Policy check" policy-check \
-            policy-check --input "$IN_ASSESSMENT" --policy "$IN_POLICY"
-        fi
-
-        if [ -n "$IN_LOGS" ]; then
-          need_policy logs
-          check "Audit-log thresholds" log-analyze \
-            log-analyze --input "$IN_LOGS" --policy "$IN_POLICY"
-        fi
-
-        if [ "$ran" -eq 0 ]; then
-          echo "::error::no checks requested — set at least one of readiness, assessment, logs"
-          exit 2
-        fi
-
-        if [ "$failed" -eq 0 ]; then
-          echo "passed=true" >> "$GITHUB_OUTPUT"
-          echo "GATE: PASS"
           exit 0
         fi
-
         echo "passed=false" >> "$GITHUB_OUTPUT"
-        echo "GATE: FAIL"
-        if [ "$FAIL_ON_FINDINGS" = "false" ]; then
-          echo "::warning::findings present; fail-on-findings is false, not failing the job"
-          exit 0
-        fi
-        exit 1
+        exit "$rc"
 
     - name: Upload evidence
       if: always()

@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims to follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The gate no longer needs GitHub.** The logic moved out of `action.yml` into
+  [`scripts/governance-gate.sh`](scripts/governance-gate.sh), which runs offline against nothing but
+  the evaluator — a pre-commit hook, a Makefile target, GitLab, Jenkins, or by hand. It writes the
+  same JSON evidence and a `summary.md` stamped with evaluator version, commit and UTC timestamp.
+  `action.yml` is now a thin wrapper around it, so CI and the local run cannot drift
+  (CONSTITUTION §4); the action adds the job summary and the evidence artifact, and nothing else.
+  Exit codes are unchanged: 0 clean, 1 findings, 2 misconfiguration.
+
+  This is the shape the gate should have had from the start. Reaching for a CI service first made
+  the useful half of the tool depend on a budget that can run out.
+
 ## [0.2.1] — 2026-08-25
 
 ### Fixed

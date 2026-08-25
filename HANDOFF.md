@@ -26,7 +26,13 @@ _HEAD main · gate PASS · 113 tests · released v0.2.0_
     numbers; rewritten to point at the checklists, per the rule the checker already enforces on
     prose. The guardrail worked unprompted, as in Session 5.
 
-- **Next:** two one-line pointers to the scope statement, in `rag-approval-blueprint` and
+- **Corrected same session:** the gate was built as a GitHub Action first, which made the useful
+  half of it depend on an Actions budget. The logic now lives in `scripts/governance-gate.sh` and
+  runs offline; `action.yml` is a thin wrapper. Verified against all seven paths locally, with the
+  harness invoking the runner's exact shell. **Not yet pushed** — the Actions budget is exhausted
+  until the end of the month, and pushing would only queue runs that cannot start.
+
+- **Next:** push when the budget resets, then two one-line pointers to the scope statement, in `rag-approval-blueprint` and
   `platform-decision-kit`. Then S·02 — the talk — which the scope statement was partly written for.
 
 - **Open:** `verification.owner_verified` is still `false` while the `verification` block records
