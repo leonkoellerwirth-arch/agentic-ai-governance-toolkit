@@ -140,6 +140,7 @@ Nothing is installed on your side and the rubric is not copied — it travels wi
 | **Boundary** | [Action authority matrix](docs/03-checklists/action-authority-matrix.md) — what the agent may do alone, what a person approves, what is refused; every row with an evidence artifact |
 | **Operating model** | [Roles & RACI](docs/04-operating-model/roles-and-raci.md) · [decision rights](docs/04-operating-model/decision-rights.md) · [committee templates](docs/04-operating-model/committee-templates.md) · [provider dependency](docs/04-operating-model/provider-dependency.md) |
 | **Monitoring** | [KPI catalog](docs/05-monitoring/kpi-catalog.md) · [logging requirements](docs/05-monitoring/logging-requirements.md) · [incident response](docs/05-monitoring/incident-response.md) |
+| **Architecture** | [Reference architecture](docs/07-architecture/reference-architecture.md) — where the model sits, where the boundary is, where evidence comes from |
 | **Readiness** | [Agent readiness rubric](docs/06-readiness/agent-readiness-rubric.md) — whether the organization can carry the exposure it runs |
 | **Evaluator** | [Python tool](evaluator/README.md): risk scoring, readiness assessment, policy checks, log analysis, optional LLM judge |
 | **Templates** | [Use-case intake](templates/use-case-intake.md) · [agent registry entry](templates/agent-registry-entry.md) · [decommissioning protocol](templates/decommissioning-protocol.md) |

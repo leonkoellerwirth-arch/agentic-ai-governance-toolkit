@@ -8,6 +8,23 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **[Reference architecture](docs/07-architecture/reference-architecture.md)** — one diagram for
+  the questions an architect asks before opening any control catalogue, and a table underneath
+  because a picture answers none of them precisely.
+
+  The first draft failed its review on four counts and the corrections are the content. It had no
+  **delegation broker**: "the requester's identity, carried through retrieval" is not a mechanism —
+  retrieval can verify a scoped, time-bound token, it cannot establish one. It had no **tool and
+  secret broker**, so a worker that both handles model output and holds credentials could be driven
+  by prompt injection into a secret-using external call. Prompt and output hashes were drawn going
+  to the *model* instead of to the trail. And four arrows asserted authorities the matrix regulates
+  differently — retrieval as unconditional, every record change as gated, every external message as
+  gated — which contradicted the automatic deletion, revocation and templated-notification paths.
+
+  The document now also says what hashes are not: they bind content already known to whoever holds
+  it, and prove neither that an access was authorised nor that no event was omitted. `scripts/render-diagrams.sh`
+  walks every `docs/**/diagrams` directory instead of one hard-coded path.
+
 - **[`OVERVIEW.md`](OVERVIEW.md)** — the entry document the portfolio did not have. Four
   repositories, one job, on one page: the problem, who has it, what you actually get, and what
   this deliberately is not.

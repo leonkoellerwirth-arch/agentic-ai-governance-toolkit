@@ -7,7 +7,9 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIAGRAMS="$ROOT_DIR/docs/01-agent-lifecycle/diagrams"
+# Every docs/**/diagrams directory, so a new area does not silently stop being rendered.
+DIAGRAM_DIRS=()
+while IFS= read -r d; do DIAGRAM_DIRS+=("$d"); done < <(find "$ROOT_DIR/docs" -type d -name diagrams | sort)
 
 command -v npx >/dev/null 2>&1 || { echo "npx (Node.js) is required" >&2; exit 1; }
 
@@ -29,11 +31,16 @@ PUPPET_CFG="$(mktemp)"
 trap 'rm -f "$PUPPET_CFG"' EXIT
 printf '{"args":["--no-sandbox"]}' > "$PUPPET_CFG"
 
-for mmd in "$DIAGRAMS"/*.mmd; do
-  name="$(basename "$mmd" .mmd)"
-  echo "==> $name.svg"
-  npx -y @mermaid-js/mermaid-cli@11 -p "$PUPPET_CFG" -b white \
-    -i "$mmd" -o "$DIAGRAMS/$name.svg"
+count=0
+for dir in "${DIAGRAM_DIRS[@]}"; do
+  for mmd in "$dir"/*.mmd; do
+    [ -e "$mmd" ] || continue
+    name="$(basename "$mmd" .mmd)"
+    echo "==> ${dir#"$ROOT_DIR"/}/$name.svg"
+    npx -y @mermaid-js/mermaid-cli@11 -p "$PUPPET_CFG" -b white \
+      -i "$mmd" -o "$dir/$name.svg"
+    count=$((count + 1))
+  done
 done
 
-echo "Done. Rendered $(find "$DIAGRAMS" -name '*.svg' | wc -l | tr -d ' ') diagram(s)."
+echo "Done. Rendered $count diagram(s)."

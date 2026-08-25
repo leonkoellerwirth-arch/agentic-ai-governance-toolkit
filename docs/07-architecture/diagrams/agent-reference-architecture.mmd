@@ -1,0 +1,75 @@
+%% Agent reference architecture — where the model sits, where the boundary is, and where evidence
+%% comes from. Authority markers match docs/03-checklists/action-authority-matrix.md:
+%%   [A] automatic   [A*] automatic while its preconditions hold   [H] human approval
+%%   [X] refused by design
+flowchart LR
+    subgraph people["People"]
+        REQ["Requester"]
+        APP["Approver<br/>or responsible function"]
+    end
+
+    subgraph org["Organisational trust boundary"]
+        subgraph identity["Identity"]
+            IDB["Delegation broker<br/>issues a scoped, time-bound,<br/>audience-bound token"]
+        end
+
+        subgraph control["Control plane — deterministic, no model in the path"]
+            POL["Action policy<br/>(authority matrix)"]
+            CHK["Pre-action check<br/>intersect requested action<br/>with the action space"]
+            GATE["Human gate<br/>fail-safe: reject"]
+            TRAIL[("Audit trail<br/>append-only, hash-chained")]
+        end
+
+        subgraph runtime["Agent runtime — sees model output"]
+            PLAN["Planner"]
+            WORK["Worker"]
+            REV["Reviewer"]
+        end
+
+        subgraph brokers["Brokers — fixed schemas, no model output admitted"]
+            TOOL["Tool and secret broker<br/>capability-bound, sink-side checks"]
+        end
+
+        subgraph data["Data plane"]
+            IDX[("Vector index<br/>self-operated")]
+            SOR[("Systems of record")]
+            SEC[("Secret store")]
+        end
+    end
+
+    subgraph outside["Outside the boundary"]
+        LLM["Model inference<br/>provider, region recorded"]
+        API["Third-party API"]
+        RCP["External recipient"]
+    end
+
+    REQ --> IDB
+    IDB -->|"scoped token"| PLAN
+    PLAN -->|"every step"| CHK
+    POL --> CHK
+    CHK -->|"[A] within the action space"| WORK
+    CHK -->|"[X] outside it — step discarded"| TRAIL
+    WORK -->|"[A*] authorisation before retrieval;<br/>[H] special category, bulk, exception"| IDX
+    IDX --> WORK
+    SOR --> WORK
+    WORK -->|"prompt and output hashes,<br/>provider and region"| TRAIL
+    WORK <-->|"inference"| LLM
+    WORK -->|"tool request — never a secret"| TOOL
+    TOOL --> SEC
+    TOOL -->|"[A*] approved flow, provider, region"| API
+    TOOL -->|"[A*] approved deletion rule;<br/>[A*] revocation on a source event"| SOR
+    TOOL -->|"[A*] pre-approved template, recipient from the record"| RCP
+    WORK -.->|"[X] never reaches the model context"| SEC
+    WORK --> REV
+    REV -->|"escalate"| GATE
+    WORK -->|"[H] record change, composed message, payment"| GATE
+    GATE --> APP
+    APP -->|"approve · reject · edit"| GATE
+    GATE -->|"[H] approved"| TOOL
+    PLAN --> TRAIL
+    REV --> TRAIL
+    GATE --> TRAIL
+    TOOL --> TRAIL
+
+    classDef refused stroke-dasharray: 4 3
+    class SEC refused
