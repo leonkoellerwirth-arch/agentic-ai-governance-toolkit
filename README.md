@@ -65,6 +65,50 @@ agent-eval log-analyze  --input evaluator/examples/logs-sample.jsonl \
                         --policy evaluator/policies/example-policy.yaml
 ```
 
+## In your CI: the gate
+
+The three commands above already exit non-zero on a finding. That makes them a gate — what was
+missing was the wiring. A repository that runs agents can reference this one directly:
+
+```yaml
+# .github/workflows/governance.yml
+name: Governance
+on: [pull_request]
+permissions:
+  contents: read
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: leonkoellerwirth-arch/agentic-ai-governance-toolkit@v0.2.0
+        with:
+          readiness: governance/org-readiness.yaml
+          assessment: governance/agent.yaml
+          logs: artifacts/audit-trail.jsonl
+          policy: governance/policy.yaml
+```
+
+Pin a tag, never a branch — the same zero-trust rule this repo applies to third-party actions
+applies to this one. `v0.2.0` is the first release that carries `action.yml`.
+
+Nothing is installed on your side and the rubric is not copied — it travels with the action, at
+the version you pinned. Set only the inputs you have; each check is skipped when its input is
+empty, and at least one is required.
+
+**The run is the evidence.** Every check writes machine-readable JSON to `governance-evidence/`
+(uploaded as a build artifact) and a readable block to the job summary, both stamped with the
+evaluator version, the commit under test and the run id. A reviewer reads the summary; an
+auditor reads the JSON; neither has to trust a screenshot.
+
+`fail-on-findings: "false"` reports without blocking. That is a reasonable way to start on a
+repository that has never been gated — and it should carry a date by which it flips back, because
+a gate that never blocks is a green check that means nothing.
+
+The `logs` input takes the JSONL audit trail written by
+[`local-agent-pipeline`](https://github.com/leonkoellerwirth-arch/local-agent-pipeline); its event
+schema is a documented integration contract with this evaluator.
+
 ## What's inside
 
 | Area | Artifact |

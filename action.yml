@@ -1,0 +1,198 @@
+# Governance Gate — a composite action that turns the evaluator's exit codes into a CI gate.
+#
+# Why this exists: `readiness`, `policy-check` and `log-analyze` already exit non-zero on a
+# finding (BIBLE §"the evaluator proves provenance, not truth"). What was missing was the
+# wiring — a consuming repository had to install the toolkit and know the CLI. It no longer
+# does; it references this action.
+#
+# The run is the evidence. Every check writes machine-readable JSON to the evidence directory
+# and a human-readable block to the job summary, both stamped with the evaluator version, the
+# action ref and the commit under test. A reviewer can read the summary; an auditor can read
+# the JSON. Neither has to trust a screenshot.
+#
+# Zero-trust: the one external action is pinned to a full commit SHA, matching ci.yml.
+# Not legal advice — see DISCLAIMER.md.
+
+name: Governance Gate
+description: >-
+  Gate a pull request on AI-agent governance findings — organizational readiness,
+  policy violations and audit-log thresholds. Exits non-zero on any finding.
+
+branding:
+  icon: shield
+  color: gray-dark
+
+inputs:
+  readiness:
+    description: >-
+      Path to the organization readiness YAML (every agent in production with its control
+      level and R0-R3 scores). Omit to skip the readiness check.
+    required: false
+    default: ""
+  assessment:
+    description: >-
+      Path to the agent assessment YAML (name, six dimension scores, data_categories,
+      human_in_the_loop). Requires `policy`. Omit to skip the policy check.
+    required: false
+    default: ""
+  logs:
+    description: >-
+      Path to a JSONL audit trail, one event per line — the format written by
+      local-agent-pipeline. Requires `policy`. Omit to skip log analysis.
+    required: false
+    default: ""
+  policy:
+    description: Path to the policy YAML. Required when `assessment` or `logs` is set.
+    required: false
+    default: ""
+  python-version:
+    description: Python version used to run the evaluator.
+    required: false
+    default: "3.11"
+  evidence-path:
+    description: Directory the JSON evidence is written to.
+    required: false
+    default: governance-evidence
+  artifact-name:
+    description: >-
+      Base name for the uploaded evidence artifact; the run id is appended. Override it when a
+      workflow runs this action more than once per run, or the second upload collides.
+    required: false
+    default: governance-evidence
+  fail-on-findings:
+    description: >-
+      "true" (default) fails the job on any finding — this is the point of a gate. Set to
+      "false" only for a reporting-only rollout, and set a date by which it flips back.
+    required: false
+    default: "true"
+
+outputs:
+  passed:
+    description: '"true" when every requested check was clean.'
+    value: ${{ steps.gate.outputs.passed }}
+  evidence-path:
+    description: Directory containing the JSON evidence files.
+    value: ${{ inputs.evidence-path }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install evaluator
+      shell: bash
+      run: pip install --quiet "$GITHUB_ACTION_PATH/evaluator"
+
+    - name: Run governance gate
+      id: gate
+      shell: bash
+      env:
+        IN_READINESS: ${{ inputs.readiness }}
+        IN_ASSESSMENT: ${{ inputs.assessment }}
+        IN_LOGS: ${{ inputs.logs }}
+        IN_POLICY: ${{ inputs.policy }}
+        EVIDENCE: ${{ inputs.evidence-path }}
+        FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+      run: |
+        set -uo pipefail
+        mkdir -p "$EVIDENCE"
+        failed=0
+        ran=0
+
+        version="$(agent-eval --version)"
+        {
+          echo "## Governance Gate"
+          echo
+          echo "| | |"
+          echo "|---|---|"
+          echo "| Evaluator | \`$version\` |"
+          echo "| Commit | \`$GITHUB_SHA\` |"
+          echo "| Run | \`$GITHUB_RUN_ID\` |"
+          echo "| Timestamp (UTC) | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+          echo
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        # $1 label · $2 evidence basename · rest: agent-eval argv
+        check() {
+          local label="$1" name="$2"; shift 2
+          ran=$((ran + 1))
+          echo "::group::$label"
+          agent-eval "$@" --json > "$EVIDENCE/$name.json" 2> "$EVIDENCE/$name.err"
+          local rc=$?
+          # --json writes the report to stdout and still exits non-zero on a finding, so the
+          # evidence file is complete either way. A non-empty .err means the command itself
+          # failed (bad input, missing file) — that is a gate failure too, not a clean pass.
+          cat "$EVIDENCE/$name.json" 2>/dev/null || true
+          cat "$EVIDENCE/$name.err" >&2 2>/dev/null || true
+          echo "::endgroup::"
+
+          if [ "$rc" -eq 0 ]; then
+            echo "### ✅ $label" >> "$GITHUB_STEP_SUMMARY"
+            echo "No findings." >> "$GITHUB_STEP_SUMMARY"
+          else
+            failed=1
+            echo "### ❌ $label" >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            head -c 8000 "$EVIDENCE/$name.json" >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+            echo >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            if [ -s "$EVIDENCE/$name.err" ]; then
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+              head -c 2000 "$EVIDENCE/$name.err" >> "$GITHUB_STEP_SUMMARY"
+              echo >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+          echo >> "$GITHUB_STEP_SUMMARY"
+        }
+
+        need_policy() {
+          if [ -z "$IN_POLICY" ]; then
+            echo "::error::input '$1' requires 'policy' to be set"
+            exit 2
+          fi
+        }
+
+        [ -n "$IN_READINESS" ] && check "Organizational readiness" readiness \
+          readiness --input "$IN_READINESS"
+
+        if [ -n "$IN_ASSESSMENT" ]; then
+          need_policy assessment
+          check "Policy check" policy-check \
+            policy-check --input "$IN_ASSESSMENT" --policy "$IN_POLICY"
+        fi
+
+        if [ -n "$IN_LOGS" ]; then
+          need_policy logs
+          check "Audit-log thresholds" log-analyze \
+            log-analyze --input "$IN_LOGS" --policy "$IN_POLICY"
+        fi
+
+        if [ "$ran" -eq 0 ]; then
+          echo "::error::no checks requested — set at least one of readiness, assessment, logs"
+          exit 2
+        fi
+
+        if [ "$failed" -eq 0 ]; then
+          echo "passed=true" >> "$GITHUB_OUTPUT"
+          echo "GATE: PASS"
+          exit 0
+        fi
+
+        echo "passed=false" >> "$GITHUB_OUTPUT"
+        echo "GATE: FAIL"
+        if [ "$FAIL_ON_FINDINGS" = "false" ]; then
+          echo "::warning::findings present; fail-on-findings is false, not failing the job"
+          exit 0
+        fi
+        exit 1
+
+    - name: Upload evidence
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: ${{ inputs.artifact-name }}-${{ github.run_id }}
+        path: ${{ inputs.evidence-path }}
+        if-no-files-found: warn

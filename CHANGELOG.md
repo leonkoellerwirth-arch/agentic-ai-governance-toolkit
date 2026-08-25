@@ -8,6 +8,24 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Governance gate as a composite action** (`action.yml`): the evaluator's exit codes were already
+  a gate — `readiness`, `policy-check` and `log-analyze` each exit non-zero on a finding — but every
+  consuming repository had to install the toolkit and know the CLI to use them. It now references
+  the action instead, pinned to a tag, and the rubric travels with it rather than being copied.
+
+  **The run is the evidence.** Each check writes machine-readable JSON to `governance-evidence/`,
+  uploaded as a build artifact, and a readable block to the job summary — both stamped with the
+  evaluator version, the commit under test and the run id. A reviewer reads the summary, an auditor
+  reads the JSON, and neither depends on a screenshot. `fail-on-findings: "false"` reports without
+  blocking, for a first rollout on a repository that has never been gated.
+
+  Checks are opt-in per input and at least one is required; a misconfiguration (an `assessment`
+  without a `policy`, or no check at all) exits 2 rather than degrading into a silent pass — as does
+  an unreadable input file. `.github/workflows/governance-gate-selftest.yml` asserts all three
+  directions on the action's `passed` output rather than on job colour, because a gate that never
+  blocks is a green check that means nothing. The clean-input case is built in the runner and
+  discarded with it; every committed example is a realistic negative case on purpose.
+
 - **Agent readiness rubric** (INV-7): `evaluator/src/agent_evaluator/readiness.yaml` and the new
   `agent-eval readiness` command answer the half of the question the toolkit could not answer
   before. `rubric.yaml` scores what an agent can do to you; `readiness.yaml` scores whether the

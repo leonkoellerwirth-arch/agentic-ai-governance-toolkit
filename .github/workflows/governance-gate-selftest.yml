@@ -1,0 +1,146 @@
+# Self-test for action.yml — proves the gate still does the one thing it exists for.
+#
+# A gate that never blocks is worse than no gate: it produces a green check that means nothing.
+# So this workflow asserts both directions, and asserts them on the `passed` output rather than
+# on the job's own colour — that is the contract a consuming repository depends on.
+#
+# There is no committed "clean" fixture. Every example in evaluator/examples/ is a realistic
+# negative case on purpose, and inventing an organisation that passes everything would be the
+# kind of decorative example this repo does not keep. The clean case is therefore built in the
+# runner, inline, and thrown away with it.
+name: Governance Gate self-test
+
+on:
+  push:
+    branches: [main]
+    paths: ["action.yml", ".github/workflows/governance-gate-selftest.yml", "evaluator/**"]
+  pull_request:
+    paths: ["action.yml", ".github/workflows/governance-gate-selftest.yml", "evaluator/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate-selftest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detects-findings:
+    name: Blocks on the known findings
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      # fail-on-findings: false so this job can assert the outcome instead of dying of it.
+      - id: gate
+        uses: ./
+        with:
+          readiness: evaluator/examples/org-readiness-demo.yaml
+          assessment: evaluator/examples/agent-for-policy-check.yaml
+          logs: evaluator/examples/logs-sample.jsonl
+          policy: evaluator/policies/example-policy.yaml
+          artifact-name: evidence-findings
+          fail-on-findings: "false"
+
+      - name: Assert the gate reported findings
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [ "${{ steps.gate.outputs.passed }}" != "false" ]; then
+            echo "::error::the bundled examples carry known findings, but the gate passed"
+            exit 1
+          fi
+          echo "gate correctly reported findings on all three checks"
+
+      - name: Assert the evidence is complete and parseable
+        shell: bash
+        run: |
+          set -uo pipefail
+          rc=0
+          for f in readiness policy-check log-analyze; do
+            path="governance-evidence/$f.json"
+            if [ ! -s "$path" ]; then
+              echo "::error::missing or empty evidence: $path"; rc=1; continue
+            fi
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$path" \
+              || { echo "::error::not valid JSON: $path"; rc=1; }
+          done
+          exit "$rc"
+
+  passes-when-clean:
+    name: Passes when there is nothing to report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      # Built here, not committed: a single C1 agent that meets every minimum. Its only job is
+      # to prove the gate can return true — without it, a gate hard-wired to "false" would pass
+      # the test above.
+      - name: Build a clean readiness input
+        shell: bash
+        run: |
+          cat > clean-readiness.yaml <<'YAML'
+          organization: Gate self-test (not an example)
+          regulatory_classification_determined: true
+          agents:
+            - name: Read-only assistant
+              control_level: C1
+              scores:
+                inventory: 3
+                oversight: 3
+                traceability: 3
+                containment: 3
+                assurance: 3
+                currency: 3
+          YAML
+
+      - id: gate
+        uses: ./
+        with:
+          readiness: clean-readiness.yaml
+          artifact-name: evidence-clean
+
+      - name: Assert the gate passed
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [ "${{ steps.gate.outputs.passed }}" != "true" ]; then
+            echo "::error::a clean input was reported as failing"
+            exit 1
+          fi
+          echo "gate correctly passed a clean input"
+
+  rejects-bad-configuration:
+    name: Fails loudly on bad configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      # A misconfigured gate must not degrade into a silent pass. `continue-on-error` lets the
+      # step fail and the job still assert on it.
+      - id: misconfigured
+        continue-on-error: true
+        uses: ./
+        with:
+          assessment: evaluator/examples/agent-for-policy-check.yaml
+          artifact-name: evidence-misconfigured
+
+      - name: Assert the misconfiguration was rejected
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [ "${{ steps.misconfigured.outcome }}" != "failure" ]; then
+            echo "::error::assessment without policy must fail, not pass silently"
+            exit 1
+          fi
+          echo "gate correctly rejected assessment without policy"
