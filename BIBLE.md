@@ -80,6 +80,14 @@ Newest first. Each: date · decision · why · (superseded by …).
   retrofit of what is already published, and the first consumer of the same pattern the readiness
   work will need. It deliberately carries no dates, deadlines, or obligations: recording provenance
   is not legal advice, and stating what an obligation requires would be.
+- **2026-08-25 — Released v0.2.0.** The evaluator's exit codes ship as a composite action
+  (`action.yml`), so a consuming repository gates on governance findings without installing the
+  toolkit or knowing the CLI, and the rubric travels with the pinned tag instead of being copied.
+  The run is the evidence: JSON per check plus a stamped job summary. Added
+  `docs/00-scope/regulatory-scope.md` — what is mapped (what an article requires), what deliberately
+  is not (whether it applies to a given system), and what is deliberately not scored (attainment).
+  That document exists because the three repositories look inconsistent on the EU AI Act from
+  outside and are not; the boundary had never been written down in one place.
 - **2026-07-14 — Ship pre-rendered SVGs for the diagrams.** `scripts/render-diagrams.sh` renders the
   `.mmd` sources to committed `.svg` via mermaid-cli + a local Chrome. The `.mmd` files remain the
   source of truth; the overview embeds Mermaid for native GitHub rendering and links the SVGs for use

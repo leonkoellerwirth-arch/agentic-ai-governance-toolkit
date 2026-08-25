@@ -136,7 +136,7 @@ only C1 agents can be ready while one running C4 agents with C2 controls is not.
 
 ## Known limitations
 
-This is the first public release (v0.1.0). What it deliberately does **not** do:
+What this deliberately does **not** do:
 
 - **It is not legal advice and not a compliance certification.** Regulatory references (EU AI Act,
   DORA) are indicative pointers marked "verify"; whether and how an obligation applies depends on

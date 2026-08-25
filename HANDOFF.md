@@ -3,6 +3,37 @@
 Session handoffs, **newest entry first**. Written by `/session-stop` (via
 `scripts/session-snapshot.sh`). Read the top entry at `/session-start`.
 
+## 2026-08-25 — Session 6 (v0.2.0: the gate leaves the repository)
+
+_HEAD main · gate PASS · 113 tests · released v0.2.0_
+
+- **Done:** the two things that turn built code into used code.
+  - **`action.yml`** — the composite action. `readiness`, `policy-check` and `log-analyze` already
+    exited non-zero on a finding; what was missing was the wiring. A consuming repository now
+    references the action at a pinned tag. Checks are opt-in per input, at least one required.
+    Evidence: JSON per check under `governance-evidence/` (uploaded as an artifact) plus a job
+    summary, both stamped with evaluator version, commit and run id. `fail-on-findings: "false"`
+    reports without blocking, for a first rollout.
+  - Misconfiguration (`assessment` without `policy`, or no check at all) exits 2, and an unreadable
+    input fails rather than degrading into a silent pass — verified against all six paths before
+    the workflow was written.
+  - **`.github/workflows/governance-gate-selftest.yml`** — three jobs asserting on the action's
+    `passed` output, not on job colour, because a gate that never blocks is a green check that
+    means nothing. The clean-input case is built in the runner and discarded with it; every
+    committed example is a realistic negative case on purpose.
+  - **`docs/00-scope/regulatory-scope.md`** — the scope statement. Linked from README and
+    `DISCLAIMER.md`. `test_every_cited_article_is_pinned` caught the first draft for citing article
+    numbers; rewritten to point at the checklists, per the rule the checker already enforces on
+    prose. The guardrail worked unprompted, as in Session 5.
+
+- **Next:** two one-line pointers to the scope statement, in `rag-approval-blueprint` and
+  `platform-decision-kit`. Then S·02 — the talk — which the scope statement was partly written for.
+
+- **Open:** `verification.owner_verified` is still `false` while the `verification` block records
+  `verified_at: 2026-08-14` with method and four EUR-Lex sources. The gap between "recorded and
+  pinned" and "read back by a person" may be smaller than the flag suggests — worth resolving, since
+  the scope statement now names that flag explicitly as the limit of what the register claims.
+
 ## 2026-08-16 — Session 5 (S·01: the readiness rubric enters the source tree)
 
 _HEAD main · gate PASS · INV-7 added · 113 tests_
