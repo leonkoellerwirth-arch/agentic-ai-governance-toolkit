@@ -15,6 +15,7 @@ diese in der KI-Verordnung (Verordnung (EU) 2024/1689) verortet sind.
 <!-- GENERATED:source_lock START — edit regulatory_sources.yaml, then run `agent-eval render-docs` -->
 > **Fassungsstand.** Die Artikelverweise unten beziehen sich auf **Verordnung (EU) 2024/1689** (CELEX 32024R1689, ABl. L, 2024/1689, 12.7.2024) — konsolidierte Fassung 02024R1689-20260727, Stand 2026-07-27.
 > Geändert durch **Verordnung (EU) 2026/1744** (CELEX 32026R1744, ABl. L, 2026/1744, 24.7.2026), in Kraft seit 2026-07-27.
+> Digital Omnibus zur KI. Er verschiebt Geltungsdaten: Die Hochrisiko-Pflichten für eigenständige Systeme gelten nun ab dem 2. Dezember 2027, für Hochrisiko-KI, die in bereits unionsrechtlich geregelte Produkte eingebettet ist, ab dem 2. August 2028. Die Transparenzpflichten und die KI-Kompetenzpflicht bleiben unverändert. Welche Daten Sie binden, ist eine Rechtsfrage, die dieses Toolkit nicht beantwortet — aber eine Checkliste ohne diesen Hinweis liest sich, als gälte jede Zeile darunter bereits.
 > Zuletzt am 2026-08-14 gegen den Text geprüft: [EUR-Lex](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02024R1689-20260727). Festgehalten in [`regulatory-sources.md`](regulatory-sources.md).
 > Das hält fest, **welcher Text** gilt — nicht, was er von Ihnen verlangt.
 <!-- GENERATED:source_lock END -->

@@ -9,9 +9,12 @@
 # and URL of that check.
 #
 # What this file deliberately does NOT record:
-#   deadlines, application dates, penalties, or any statement about what an
-#   obligation requires. Those are legal conclusions. This file records
-#   PROVENANCE — which text, which version, checked when, verifiable where.
+#   penalties, or any statement about what an obligation requires of YOU. Those
+#   are legal conclusions. This file records PROVENANCE — which text, which
+#   version, checked when, verifiable where. An amending act's effect on
+#   application dates belongs to provenance, not to conclusion: it is part of
+#   which text is in force, and withholding it made the checklists read as if
+#   deferred obligations already bound the reader.
 #   The checklists keep saying "verify"; this file says what to verify against.
 #
 # Read by:   agent_evaluator.regulatory
@@ -49,10 +52,20 @@ frameworks:
         in_force: 2026-07-27
         eli: http://data.europa.eu/eli/reg/2026/1744/oj
         note: >-
-          Digital Omnibus on AI — amends Regulations (EU) 2024/1689, (EU) 2018/1139
-          and (EU) 2023/1230 as regards the simplification of the implementation of
-          harmonised rules on artificial intelligence. It moves application dates.
-          Which dates bind you is a legal question this toolkit does not answer.
+          Digital Omnibus on AI. It moves application dates: the high-risk obligations for
+          standalone systems now apply from 2 December 2027, and for high-risk AI embedded in
+          products already covered by Union product legislation from 2 August 2028. The transparency
+          obligations and the AI-literacy duty are unchanged. Which dates bind you is a legal
+          question this toolkit does not answer — but a checklist read without this note reads
+          as if every row below were already in force.
+        note_de: >-
+          Digital Omnibus zur KI. Er verschiebt Geltungsdaten: Die Hochrisiko-Pflichten für
+          eigenständige Systeme gelten nun ab dem 2. Dezember 2027, für Hochrisiko-KI, die in
+          bereits unionsrechtlich geregelte Produkte eingebettet ist, ab dem 2. August 2028.
+          Die Transparenzpflichten und die
+          KI-Kompetenzpflicht bleiben unverändert. Welche Daten Sie binden, ist eine
+          Rechtsfrage, die dieses Toolkit nicht beantwortet — aber eine Checkliste ohne diesen
+          Hinweis liest sich, als gälte jede Zeile darunter bereits.
     references:
       - { id: "5", topic: "prohibited practices" }
       - { id: "6", topic: "high-risk classification" }

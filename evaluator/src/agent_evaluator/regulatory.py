@@ -52,6 +52,7 @@ class Amendment:
     oj: str
     in_force: str
     note: str
+    note_de: str = ""
 
 
 @dataclass(frozen=True)
@@ -130,6 +131,7 @@ def load_sources(path: str | Path | None = None) -> Sources:
                     oj=a["oj"],
                     in_force=str(a["in_force"]),
                     note=a["note"].strip(),
+                    note_de=(a.get("note_de") or "").strip(),
                 )
                 for a in fw.get("amended_by", [])
             ),
@@ -213,6 +215,7 @@ def _render_source_lock(sources: Sources, framework: Framework, lang: str) -> st
         amendments = "".join(
             f"\n> Geändert durch **{a.act_de}** (CELEX {a.celex}, {_oj_de(a.oj)}), "
             f"in Kraft seit {a.in_force}."
+            + (f"\n> {' '.join((a.note_de or a.note).split())}" if (a.note_de or a.note) else "")
             for a in framework.amended_by
         )
         return (
@@ -227,6 +230,7 @@ def _render_source_lock(sources: Sources, framework: Framework, lang: str) -> st
         )
     amendments = "".join(
         f"\n> Amended by **{a.act}** (CELEX {a.celex}, {a.oj}), in force {a.in_force}."
+        + (f"\n> {' '.join(a.note.split())}" if a.note else "")
         for a in framework.amended_by
     )
     return (

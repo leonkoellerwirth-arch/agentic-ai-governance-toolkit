@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **The checklists read as if deferred obligations were already in force.** Regulation (EU)
+  2026/1744 — the Digital Omnibus on AI, in force since 27 July 2026 — moved the high-risk
+  application dates to 2 December 2027 for standalone systems and 2 August 2028 for high-risk AI
+  embedded in products already covered by Union product legislation. The transparency obligations
+  and the AI-literacy duty were left where they were.
+
+  The source lock already recorded the amending act, its CELEX id and its date of entry into
+  force. It did not record what the act *did*, and a note in `regulatory_sources.yaml` saying so
+  was never rendered. A practitioner opening the checklist in August 2026 therefore saw rows for
+  risk management, technical documentation, record-keeping and post-market monitoring with nothing
+  to indicate that none of them bind yet.
+
+  The note is now concrete and rendered in both languages. This also narrows a rule in the source
+  file: it still records no penalties and no statement about what an obligation requires of the
+  reader, but an amending act's effect on application dates is provenance, not conclusion — it is
+  part of which text is in force, and withholding it made the omission itself misleading.
+
 ### Added
 
 - **[Reference architecture](docs/07-architecture/reference-architecture.md)** — one diagram for

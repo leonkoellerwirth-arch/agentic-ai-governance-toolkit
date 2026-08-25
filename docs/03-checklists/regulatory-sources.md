@@ -33,7 +33,7 @@ if this page carries one no checklist cites.
 
 **Amendments incorporated**
 
-- **Regulation (EU) 2026/1744** — CELEX 32026R1744, OJ L, 2026/1744, 24.7.2026, in force 2026-07-27. Digital Omnibus on AI — amends Regulations (EU) 2024/1689, (EU) 2018/1139 and (EU) 2023/1230 as regards the simplification of the implementation of harmonised rules on artificial intelligence. It moves application dates. Which dates bind you is a legal question this toolkit does not answer.
+- **Regulation (EU) 2026/1744** — CELEX 32026R1744, OJ L, 2026/1744, 24.7.2026, in force 2026-07-27. Digital Omnibus on AI. It moves application dates: the high-risk obligations for standalone systems now apply from 2 December 2027, and for high-risk AI embedded in products already covered by Union product legislation from 2 August 2028. The transparency obligations and the AI-literacy duty are unchanged. Which dates bind you is a legal question this toolkit does not answer — but a checklist read without this note reads as if every row below were already in force.
 
 **Referenced in the checklists**
 
